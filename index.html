@@ -300,29 +300,49 @@ let data=loadLocal();
 const setSync=(t,ok)=>{const e=$('#sync');if(e){e.textContent=t;e.style.color=ok?'#15803d':'#b45309'}};
 setSync('đang kết nối...',false);
 
+// Chờ kết nối xong rồi mới cho lưu, tránh dữ liệu bị lưu nhầm vào máy
 const ready=(async()=>{
   try{DB=window.claude&&claude.use?await claude.use('db'):null}catch(e){DB=null}
   if(!DB){setSync('chỉ lưu trên máy này (trang chưa bật đồng bộ)',false);return}
-  const local=loadLocal();
+  const local=loadLocal();            // giữ lại dữ liệu cũ trên máy
   data={movements:[],violations:[]};
   watch('movements');watch('violations');
   setSync('đã đồng bộ giữa các thiết bị',true);
   await migrateLocal(local);
 })();
 
+// Đưa dữ liệu đã nhập khi còn ở chế độ cục bộ lên kho dùng chung
 async function migrateLocal(local){
   const items=[];
   ['movements','violations'].forEach(c=>local[c].forEach(o=>items.push([c,o])));
   if(!items.length)return;
   try{
     for(const [c,o] of items)await DB.collection(c).doc(String(o.id)).set(o);
-    localStorage.removeItem(DK);
+    localStorage.removeItem(DK);      // chỉ xóa bản cục bộ khi đã đẩy lên thành công
     setSync('đã đồng bộ giữa các thiết bị (đã chuyển '+items.length+' mục cũ)',true);
   }catch(e){
     setSync('đã kết nối nhưng chưa chuyển được dữ liệu cũ (thiếu quyền ghi)',false);
   }
 }
 
+async function put(col,obj,msgEl){
+  await ready;
+  if(DB){
+    try{await DB.collection(col).doc(String(obj.id)).set(obj);return true}
+    catch(e){say(msgEl,'Không lưu được lên kho dùng chung (cần quyền ghi, ví dụ editor).');return false}
+  }
+  data[col].push(obj);saveLocal();render();return true;
+}
+async function remove(col,id){
+  await ready;
+  if(DB){try{await DB.collection(col).doc(String(id)).delete()}catch(e){setSync('không xóa được: thiếu quyền',false)}}
+  else{data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render()}
+}
+function watch(col){
+  DB.collection(col).onSnapshot(snap=>{
+    data[col]=snap.docs.map(d=>d.data()).filter(Boolean).sort((x,y)=>x.id-y.id);render();
+  },()=>setSync('mất kết nối kho dùng chung',false));
+}
 async function put(col,obj,msgEl){
   await ready;
   if(DB){
