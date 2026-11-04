@@ -294,21 +294,45 @@ const vdate=iso=>iso.split('-').reverse().join('/');
 
 // Dữ liệu dùng chung (db của trang). Nếu không có thì lưu tạm trên máy này.
 let DB=null;
-let data={movements:[],violations:[]};
 const loadLocal=()=>{try{return Object.assign({movements:[],violations:[]},JSON.parse(localStorage.getItem(DK)))}catch(e){return {movements:[],violations:[]}}};
 const saveLocal=()=>{try{localStorage.setItem(DK,JSON.stringify(data))}catch(e){}};
-data=loadLocal();
+let data=loadLocal();
 const setSync=(t,ok)=>{const e=$('#sync');if(e){e.textContent=t;e.style.color=ok?'#15803d':'#b45309'}};
-setSync('chỉ lưu trên máy này',false);
+setSync('đang kết nối...',false);
+
+const ready=(async()=>{
+  try{DB=window.claude&&claude.use?await claude.use('db'):null}catch(e){DB=null}
+  if(!DB){setSync('chỉ lưu trên máy này (trang chưa bật đồng bộ)',false);return}
+  const local=loadLocal();
+  data={movements:[],violations:[]};
+  watch('movements');watch('violations');
+  setSync('đã đồng bộ giữa các thiết bị',true);
+  await migrateLocal(local);
+})();
+
+async function migrateLocal(local){
+  const items=[];
+  ['movements','violations'].forEach(c=>local[c].forEach(o=>items.push([c,o])));
+  if(!items.length)return;
+  try{
+    for(const [c,o] of items)await DB.collection(c).doc(String(o.id)).set(o);
+    localStorage.removeItem(DK);
+    setSync('đã đồng bộ giữa các thiết bị (đã chuyển '+items.length+' mục cũ)',true);
+  }catch(e){
+    setSync('đã kết nối nhưng chưa chuyển được dữ liệu cũ (thiếu quyền ghi)',false);
+  }
+}
 
 async function put(col,obj,msgEl){
+  await ready;
   if(DB){
     try{await DB.collection(col).doc(String(obj.id)).set(obj);return true}
-    catch(e){say(msgEl,'Không lưu được lên kho dùng chung (cần quyền Contributor trở lên).');return false}
+    catch(e){say(msgEl,'Không lưu được lên kho dùng chung (cần quyền ghi, ví dụ editor).');return false}
   }
   data[col].push(obj);saveLocal();render();return true;
 }
 async function remove(col,id){
+  await ready;
   if(DB){try{await DB.collection(col).doc(String(id)).delete()}catch(e){setSync('không xóa được: thiếu quyền',false)}}
   else{data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render()}
 }
@@ -317,12 +341,6 @@ function watch(col){
     data[col]=snap.docs.map(d=>d.data()).filter(Boolean).sort((x,y)=>x.id-y.id);render();
   },()=>setSync('mất kết nối kho dùng chung',false));
 }
-(async()=>{
-  try{
-    DB=window.claude&&claude.use?await claude.use('db'):null;
-    if(DB){data={movements:[],violations:[]};watch('movements');watch('violations');setSync('đã đồng bộ giữa các thiết bị',true)}
-  }catch(e){DB=null}
-})();
 
 const TYPES=[['Đi trễ',2],['Không đồng phục',2],['Thiếu khăn quàng / huy hiệu',1],['Mất trật tự trong giờ',1],['Sử dụng điện thoại',3],['Xả rác bừa bãi',1],['Nghỉ học không phép',3],['Vi phạm khác',1]];
 $('#vt').innerHTML=TYPES.map(t=>'<option>'+t[0]+'</option>').join('');
