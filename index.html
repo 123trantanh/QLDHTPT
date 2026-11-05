@@ -127,7 +127,7 @@ select option{color:#111}
         <div class="field"><label for="vcl">Lớp</label><input id="vcl" placeholder="VD: 8A1"></div>
         <div class="field full"><label for="vn">Học sinh vi phạm</label><input id="vn" placeholder="Họ và tên"></div>
         <div class="field"><label for="vt">Lỗi vi phạm</label><select id="vt"></select></div>
-        <div class="field"><label for="vp">Điểm trừ</label><input id="vp" type="number" min="0" max="201" value="2"></div>
+        <div class="field"><label for="vp">Điểm trừ</label><input id="vp" type="number" min="0" max="300" value="2"></div>
         <div class="field full"><label for="vnote">Ghi chú</label><input id="vnote" placeholder="Không bắt buộc"></div>
         <div class="msg full" id="vmsg2" role="alert"></div>
         <button class="primary full" type="submit">Lưu vi phạm</button>
@@ -144,7 +144,7 @@ select option{color:#111}
         <div class="demo-top">
           <h2>📋 Trải nghiệm sản phẩm</h2>
           <div class="chips">
-            <span class="chip gold">🏫 THPT Demo Sản Phẩm</span>
+            <span class="chip gold">🏫 THCS Demo Sản Phẩm</span>
             <span class="chip">👥 1.050 học sinh · 25 lớp</span>
             <span class="chip">✏️ Dữ liệu mẫu</span>
             <span class="chip">🔑 Không cần mật khẩu</span>
@@ -286,80 +286,73 @@ $('#back').onclick=e=>{e.preventDefault();pending=null;show('reg')};
 $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản trị trường để đặt lại mật khẩu.')};
 
 
-// ===== Báo cáo sau đăng nhập =====
-const DK='qld_data';
-const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-const vdate=iso=>iso.split('-').reverse().join('/');
+// ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
+const API_URL = 'https://script.google.com/macros/s/AKfycbwkF2AzbjMVWmm3JdvCM-B7MRlFR9C7l2JiHTITq8LiKtZ3dHKGNSafi9t6JhWbktRlQA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_KEY = '150312';    // <-- phải GIỐNG hệt SECRET trong Code.gs
+const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
-// Dữ liệu dùng chung (db của trang). Nếu không có thì lưu tạm trên máy này.
-let DB=null;
+const DK='qld_data';
+const useApi=!!API_URL;
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const nowStr=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())};
+const vdate=iso=>String(iso).split('-').reverse().join('/');
+
+let data={movements:[],violations:[]};
 const loadLocal=()=>{try{return Object.assign({movements:[],violations:[]},JSON.parse(localStorage.getItem(DK)))}catch(e){return {movements:[],violations:[]}}};
 const saveLocal=()=>{try{localStorage.setItem(DK,JSON.stringify(data))}catch(e){}};
-let data=loadLocal();
 const setSync=(t,ok)=>{const e=$('#sync');if(e){e.textContent=t;e.style.color=ok?'#15803d':'#b45309'}};
-setSync('đang kết nối...',false);
+if(!useApi){data=loadLocal();setSync('chưa nối Google Sheets: chỉ lưu trên máy này',false)}
+else setSync('đang kết nối Google Sheets...',false);
 
-// Chờ kết nối xong rồi mới cho lưu, tránh dữ liệu bị lưu nhầm vào máy
-const ready=(async()=>{
-  try{DB=window.claude&&claude.use?await claude.use('db'):null}catch(e){DB=null}
-  if(!DB){setSync('chỉ lưu trên máy này (trang chưa bật đồng bộ)',false);return}
-  const local=loadLocal();            // giữ lại dữ liệu cũ trên máy
-  data={movements:[],violations:[]};
-  watch('movements');watch('violations');
-  setSync('đã đồng bộ giữa các thiết bị',true);
-  await migrateLocal(local);
-})();
+async function apiGet(){
+  const r=await fetch(API_URL+'?key='+encodeURIComponent(API_KEY)+'&t='+Date.now());
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.error||'Lỗi không rõ');
+  return j;
+}
+async function apiPost(body){
+  // Không đặt header Content-Type để trình duyệt khỏi gửi yêu cầu kiểm tra CORS trước
+  const r=await fetch(API_URL,{method:'POST',body:JSON.stringify(Object.assign({key:API_KEY},body))});
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.error||'Lỗi không rõ');
+  return j;
+}
 
-// Đưa dữ liệu đã nhập khi còn ở chế độ cục bộ lên kho dùng chung
-async function migrateLocal(local){
-  const items=[];
-  ['movements','violations'].forEach(c=>local[c].forEach(o=>items.push([c,o])));
-  if(!items.length)return;
+let busy=0;
+async function refresh(){
+  if(!useApi||busy)return;
   try{
-    for(const [c,o] of items)await DB.collection(c).doc(String(o.id)).set(o);
-    localStorage.removeItem(DK);      // chỉ xóa bản cục bộ khi đã đẩy lên thành công
-    setSync('đã đồng bộ giữa các thiết bị (đã chuyển '+items.length+' mục cũ)',true);
-  }catch(e){
-    setSync('đã kết nối nhưng chưa chuyển được dữ liệu cũ (thiếu quyền ghi)',false);
-  }
+    const j=await apiGet();
+    data.movements=(j.movements||[]).sort((a,b)=>a.id-b.id);
+    data.violations=(j.violations||[]).sort((a,b)=>a.id-b.id);
+    render();
+    setSync('đã đồng bộ Google Sheets lúc '+nowStr(),true);
+  }catch(e){setSync('không kết nối được Google Sheets ('+e.message+')',false)}
 }
 
 async function put(col,obj,msgEl){
-  await ready;
-  if(DB){
-    try{await DB.collection(col).doc(String(obj.id)).set(obj);return true}
-    catch(e){say(msgEl,'Không lưu được lên kho dùng chung (cần quyền ghi, ví dụ editor).');return false}
-  }
-  data[col].push(obj);saveLocal();render();return true;
+  if(!useApi){data[col].push(obj);saveLocal();render();return true}
+  busy++;
+  data[col].push(obj);render();
+  try{
+    await apiPost({action:'add',type:col,data:obj});
+    return true;
+  }catch(e){
+    data[col]=data[col].filter(x=>x.id!==obj.id);render();
+    say(msgEl,'Không lưu được lên Google Sheets: '+e.message);
+    return false;
+  }finally{busy--;refresh()}
 }
 async function remove(col,id){
-  await ready;
-  if(DB){try{await DB.collection(col).doc(String(id)).delete()}catch(e){setSync('không xóa được: thiếu quyền',false)}}
-  else{data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render()}
-}
-function watch(col){
-  DB.collection(col).onSnapshot(snap=>{
-    data[col]=snap.docs.map(d=>d.data()).filter(Boolean).sort((x,y)=>x.id-y.id);render();
-  },()=>setSync('mất kết nối kho dùng chung',false));
-}
-async function put(col,obj,msgEl){
-  await ready;
-  if(DB){
-    try{await DB.collection(col).doc(String(obj.id)).set(obj);return true}
-    catch(e){say(msgEl,'Không lưu được lên kho dùng chung (cần quyền ghi, ví dụ editor).');return false}
-  }
-  data[col].push(obj);saveLocal();render();return true;
-}
-async function remove(col,id){
-  await ready;
-  if(DB){try{await DB.collection(col).doc(String(id)).delete()}catch(e){setSync('không xóa được: thiếu quyền',false)}}
-  else{data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render()}
-}
-function watch(col){
-  DB.collection(col).onSnapshot(snap=>{
-    data[col]=snap.docs.map(d=>d.data()).filter(Boolean).sort((x,y)=>x.id-y.id);render();
-  },()=>setSync('mất kết nối kho dùng chung',false));
+  if(!useApi){data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render();return}
+  busy++;
+  const backup=data[col];
+  data[col]=data[col].filter(x=>String(x.id)!==String(id));render();
+  try{await apiPost({action:'delete',type:col,id:id})}
+  catch(e){data[col]=backup;render();setSync('không xóa được: '+e.message,false)}
+  finally{busy--;refresh()}
 }
 
 const TYPES=[['Đi trễ',2],['Không đồng phục',2],['Thiếu khăn quàng / huy hiệu',1],['Mất trật tự trong giờ',1],['Sử dụng điện thoại',3],['Xả rác bừa bãi',1],['Nghỉ học không phép',3],['Vi phạm khác',1]];
@@ -379,7 +372,7 @@ function renderMoves(){
 }
 function renderViol(){
   const day=$('#vf').value,l=data.violations.filter(v=>v.date===day);
-  const tot=l.reduce((a,v)=>a+v.pts,0);
+  const tot=l.reduce((a,v)=>a+(Number(v.pts)||0),0);
   $('#vsum').textContent=l.length+' lỗi · trừ '+tot+' điểm';
   $('#violList').innerHTML=l.length?l.slice().reverse().map(v=>'<div class="item"><div><b>'+esc(v.name)+'</b> · '+esc(v.cls)+'<small>'+esc(v.type)+(v.note?' — '+esc(v.note):'')+'</small><small>Ghi bởi '+esc(v.by)+'</small></div><div style="text-align:right"><div class="pts">-'+v.pts+'</div><button class="del" data-id="'+v.id+'">Xóa</button></div></div>').join(''):'<div class="empty">Chưa ghi nhận vi phạm nào trong ngày này.</div>';
   $('#violList').querySelectorAll('.del').forEach(b=>b.onclick=()=>remove('violations',b.dataset.id));
@@ -405,6 +398,11 @@ $('#violForm').onsubmit=async e=>{
   }
 };
 render();
+if(useApi){
+  refresh();
+  setInterval(()=>{if(!document.hidden)refresh()},POLL_MS);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+}
 
 let deferred;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e});
@@ -413,5 +411,3 @@ $('#install').onclick=()=>{deferred?deferred.prompt():alert('Trên điện tho�
 </body>
 </html>
 
-</body>
-</html>
