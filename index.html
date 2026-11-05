@@ -192,19 +192,19 @@ select option{color:#111}
 
       <form class="card" id="regForm" novalidate hidden>
         <div class="field"><label for="ru">Tên đăng nhập</label><input id="ru" autocomplete="username"></div>
-        <div class="field"><label for="re">Gmail nhận mã xác nhận</label><input id="re" type="email" placeholder="ten@gmail.com" autocomplete="email"></div>
+        <div class="field"><label for="re">Gmail của bạn</label><input id="re" type="email" placeholder="ten@gmail.com" autocomplete="email"></div>
         <div class="field"><label for="rp">Mật khẩu (từ 6 ký tự)</label><input id="rp" type="password" autocomplete="new-password"></div>
         <div class="msg" id="rmsg" role="alert"></div>
-        <button class="primary" type="submit">Gửi mã về Gmail</button>
+        <button class="primary" type="submit">Lấy mã xác nhận</button>
       </form>
 
       <form class="card" id="verifyForm" novalidate hidden>
-        <p style="margin:0 0 12px;font-size:.88rem">Mã 6 số đã được gửi tới <b id="vmail"></b>. Mã có hiệu lực 10 phút.</p>
+        <p style="margin:0 0 12px;font-size:.88rem">Mã xác nhận cho <b id="vmail"></b> hiển thị bên dưới. Mã có hiệu lực 10 phút.</p>
         <div class="mailbox" id="mailbox"></div>
         <div class="field"><label for="vc">Mã xác nhận</label><input id="vc" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="letter-spacing:.4em;text-align:center;font-size:1.2rem"></div>
         <div class="msg" id="vmsg" role="alert"></div>
         <button class="primary" type="submit">Xác nhận &amp; tạo tài khoản</button>
-        <a class="link" href="#" id="resend">Gửi lại mã</a>
+        <a class="link" href="#" id="resend">Tạo lại mã</a>
         <a class="link" href="#" id="back" style="margin-top:6px;color:var(--muted)">Đổi Gmail</a>
       </form>
 
@@ -261,8 +261,8 @@ async function sendCode(email,code){
 function newCode(){const n=crypto.getRandomValues(new Uint32Array(1))[0]%1000000;return String(n).padStart(6,'0')}
 async function issue(){
   if(useApi){
-    await apiPost({action:'sendCode',username:pending.user,email:pending.email,password:pending.password});
-    $('#mailbox').innerHTML='📧 Đã gửi mã tới Gmail của bạn. Nếu chưa thấy, hãy kiểm tra mục <b>Thư rác</b>.';
+    const r=await apiPost({action:'sendCode',username:pending.user,email:pending.email,password:pending.password});
+    $('#mailbox').innerHTML='🔑 Mã xác nhận của bạn là <b>'+esc(r.code)+'</b>';
   }else{
     pending.code=newCode();pending.exp=Date.now()+10*60*1000;pending.tries=0;
     await sendCode(pending.email,pending.code);
@@ -278,7 +278,7 @@ $('#regForm').onsubmit=async e=>{
   if(p.length<6){say(m,'Mật khẩu cần ít nhất 6 ký tự.');return}
   if(!useApi&&(u==='admin'||getAcc()[u])){say(m,'Tên đăng nhập này đã có người dùng.');return}
   pending={user:u,email:em,password:p,hash:useApi?'':await sha(u+':'+p)};
-  say(m,useApi?'Đang gửi mã về Gmail...':'',true);
+  say(m,useApi?'Đang tạo mã...':'',true);
   try{await issue();say(m,'');show('verify')}
   catch(err){pending=null;say(m,err.message)}
 };
@@ -301,16 +301,16 @@ $('#verifyForm').onsubmit=async e=>{
 };
 $('#resend').onclick=async e=>{
   e.preventDefault();
-  try{await issue();say($('#vmsg'),'Đã gửi mã mới.',true)}catch(err){say($('#vmsg'),err.message)}
+  try{await issue();say($('#vmsg'),'Đã tạo mã mới.',true)}catch(err){say($('#vmsg'),err.message)}
 };
 $('#back').onclick=e=>{e.preventDefault();pending=null;show('reg')};
 $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản trị trường để đặt lại mật khẩu.')};
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGLrM5kTbfSCRl0Opy_miIJBPbYpUwhVdkOD5MvBgjRdXIQaLWSDc-Abe6SrmiRzaY5w/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbz8UOr1gvitTYSKSySLkxfMohUo66h0w8FF92TCK2dQVBOsn3MW0N1ZwCMmRMk8hcu2Nw/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
-const POLL_MS = 5000;                    // tự tải lại dữ liệu mỗi 5 giây
+const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
 const DK='qld_data';
 const useApi=!!API_URL;
@@ -431,5 +431,6 @@ $('#install').onclick=()=>{deferred?deferred.prompt():alert('Trên điện tho�
 </script>
 </body>
 </html>
+
 
 
