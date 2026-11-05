@@ -156,6 +156,20 @@ select option{color:#111}
         <span id="wrange" class="sum"></span>
       </div>
       <p style="margin:0 0 10px;font-size:.82rem;color:var(--muted)">Điểm tuần = <span id="basetxt"></span> + điểm cộng − điểm trừ vi phạm. Tuần tính từ thứ Hai đến Chủ nhật.</p>
+      <details id="rules" class="card" style="margin:0 0 12px;padding:10px 14px">
+        <summary style="cursor:pointer;font-weight:700">📋 Cách tính điểm thi đua</summary>
+        <div style="margin-top:10px;font-size:.88rem;line-height:1.55">
+          <p style="margin:0 0 6px"><b>Điểm gốc:</b> mỗi lớp bắt đầu tuần với <span id="rl-base"></span> điểm.</p>
+          <p style="margin:0 0 4px"><b>Điểm trừ (vi phạm):</b></p>
+          <ul id="rl-viol" style="margin:0 0 8px;padding-left:20px"></ul>
+          <p style="margin:0 0 4px"><b>Điểm cộng:</b></p>
+          <ul id="rl-bonus" style="margin:0 0 8px;padding-left:20px"></ul>
+          <p style="margin:0 0 4px"><b>Quy định bổ sung</b> <small style="color:var(--muted)">(dùng chung mọi thiết bị khi đã nối Google Sheets)</small></p>
+          <textarea id="rl-note" rows="5" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid var(--line,#ccc);font:inherit" placeholder="Ví dụ: Đi trễ quá 3 lần/tuần trừ thêm 2 điểm; lớp đứng nhất tuần được cộng 5 điểm vào tháng..."></textarea>
+          <button type="button" id="rl-save" class="primary" style="margin-top:6px">Lưu quy định</button>
+          <span id="rl-msg" style="margin-left:8px;color:var(--muted)"></span>
+        </div>
+      </details>
       <div class="tblwrap"><div id="rankTable"></div></div>
 
       <h3>Cộng điểm thi đua cho lớp</h3>
@@ -345,7 +359,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbzPQY94QsX0DJ9D5ePJOy7OaYxxbhFlaqS13DDqkCefTDt3hbMVoNGFNJw5EJkc9FHPAA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbw7A43wJbM27PH0y2bt5-kHcwy3779ht9_vxC76ABTcYbqP2swGqiVfjxTgX3wzpkk5hA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -386,6 +400,7 @@ async function refresh(){
     data.movements=(j.movements||[]).sort((a,b)=>a.id-b.id);
     data.violations=(j.violations||[]).sort((a,b)=>a.id-b.id);
     data.bonuses=(j.bonuses||[]).sort((a,b)=>a.id-b.id);
+    if(typeof j.rules==='string'&&document.activeElement!==$('#rl-note')&&!rlDirty)$('#rl-note').value=j.rules;
     render();
     setSync('đã đồng bộ Google Sheets lúc '+nowStr(),true);
   }catch(e){setSync('không kết nối được Google Sheets ('+e.message+')',false)}
@@ -464,6 +479,19 @@ $('#br').innerHTML=REASONS.map(r=>'<option>'+r[0]+'</option>').join('');
 $('#br').onchange=()=>{$('#bp').value=REASONS[$('#br').selectedIndex][1]};
 $('#bd').value=$('#wd').value=today();
 $('#basetxt').textContent=BASE_SCORE;
+$('#rl-base').textContent=BASE_SCORE;
+$('#rl-viol').innerHTML=TYPES.map(t=>'<li>'+esc(t[0])+': <b>−'+t[1]+'</b> điểm</li>').join('');
+$('#rl-bonus').innerHTML=REASONS.map(r=>'<li>'+esc(r[0])+': <b>+'+r[1]+'</b> điểm</li>').join('');
+let rlDirty=false;
+try{if(!useApi)$('#rl-note').value=localStorage.getItem('rules_note')||''}catch(e){}
+$('#rl-note').oninput=()=>{rlDirty=true};
+$('#rl-save').onclick=async()=>{
+  const t=$('#rl-note').value;
+  try{
+    if(useApi)await apiPost({action:'setRules',text:t});else localStorage.setItem('rules_note',t);
+    rlDirty=false;$('#rl-msg').textContent='Đã lưu.';
+  }catch(e){$('#rl-msg').textContent='Không lưu được: '+e.message}
+  setTimeout(()=>$('#rl-msg').textContent='',2000)};
 
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 function weekRange(iso){
@@ -520,3 +548,4 @@ $('#install').onclick=()=>{deferred?deferred.prompt():alert('Trên điện tho�
 </script>
 </body>
 </html>
+
