@@ -102,6 +102,37 @@ select option{color:#111}
 /* Vừa một màn hình: giữ nguyên bố cục, cả trang được thu nhỏ bằng JS bên dưới */
 html,body{height:100%;overflow:hidden}
 body.fitscroll{overflow:auto}
+
+/* ===== Trợ lý AI ===== */
+.ai-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;width:58px;height:58px;border-radius:50%;border:0;
+  background:var(--blue);color:#fff;font-size:1.7rem;cursor:pointer;box-shadow:0 8px 22px rgba(30,64,175,.45)}
+.ai-fab:hover{background:#1d4fd8}
+.ai-fab .dot{position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid #fff}
+.ai-box{position:fixed;right:16px;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:51;width:min(380px,calc(100vw - 32px));
+  height:min(560px,calc(100dvh - 110px));display:flex;flex-direction:column;background:var(--card);color:var(--ink);
+  border-radius:16px;box-shadow:0 18px 44px rgba(15,30,80,.35);overflow:hidden;border:1px solid var(--line)}
+.ai-head{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--navy);color:#fff}
+.ai-head .ai-av{font-size:1.5rem}
+.ai-head div{flex:1;line-height:1.2}
+.ai-head small{display:block;font-size:.72rem;opacity:.85}
+.ai-head button{background:none;border:0;color:#fff;font-size:1.1rem;cursor:pointer;padding:6px 8px;border-radius:8px}
+.ai-head button:hover{background:rgba(255,255,255,.15)}
+.ai-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;line-height:1.45}
+.ai-msg{max-width:85%;padding:8px 11px;border-radius:14px;white-space:normal;overflow-wrap:anywhere}
+.ai-msg.bot{align-self:flex-start;background:rgba(37,99,235,.09);border-bottom-left-radius:4px}
+.ai-msg.me{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+.ai-msg .tag{display:block;margin-top:4px;font-size:.68rem;color:var(--muted)}
+.ai-typing{align-self:flex-start;color:var(--muted);font-size:.85rem;padding:4px 6px}
+.ai-sug{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;flex:none}
+.ai-sug button{flex:none;font:inherit;font-size:.76rem;padding:6px 10px;border-radius:99px;border:1px solid var(--blue);background:transparent;color:var(--blue);cursor:pointer;white-space:nowrap}
+.ai-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);flex:none}
+.ai-form input{flex:1;padding:10px 12px;font-size:16px;border-radius:99px}
+.ai-form button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--blue);color:#fff;font-size:1.1rem;cursor:pointer}
+.ai-form button:disabled{opacity:.5;cursor:default}
+@media (max-width:480px){
+  .ai-box{right:8px;left:8px;width:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));height:min(600px,calc(100dvh - 16px))}
+  body.ai-open .ai-fab{display:none}
+}
 </style>
 </head>
 <body>
@@ -267,6 +298,22 @@ body.fitscroll{overflow:auto}
   </div>
 </div>
 
+<button class="ai-fab" id="aiFab" aria-label="Mở trợ lý AI" aria-expanded="false" aria-controls="aiBox">🤖<span class="dot"></span></button>
+<section class="ai-box" id="aiBox" role="dialog" aria-label="Trợ lý AI" hidden>
+  <div class="ai-head">
+    <span class="ai-av">🤖</span>
+    <div><b>Trợ lý Đội</b><small id="aiMode"></small></div>
+    <button type="button" id="aiClear" aria-label="Xóa cuộc trò chuyện" title="Xóa cuộc trò chuyện">🗑️</button>
+    <button type="button" id="aiClose" aria-label="Đóng trợ lý">✕</button>
+  </div>
+  <div class="ai-log" id="aiLog" aria-live="polite"></div>
+  <div class="ai-sug" id="aiSug"></div>
+  <form class="ai-form" id="aiForm">
+    <input id="aiIn" placeholder="Nhập câu hỏi..." autocomplete="off" maxlength="500" aria-label="Câu hỏi cho trợ lý">
+    <button type="submit" id="aiSend" aria-label="Gửi">➤</button>
+  </form>
+</section>
+
 <script>
 const $=s=>document.querySelector(s);
 const enter=name=>{$('#who').textContent=name;document.body.classList.add('in');window.scrollTo(0,0)};
@@ -362,7 +409,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbxP_KbJuUORPd__prN13YebKQkmv85j6VoxvMYX9jPQtskdn5oAYUK8pIlKa_B4IdWFFg/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGpr4mJYtXVXgNYtn4m-6a5YJ40Ru4qmGFzsA_vdrZTcjr5wVGXOprOvTtgllSIUDOAw/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -544,6 +591,165 @@ if(useApi){
   setInterval(()=>{if(!document.hidden)refresh()},POLL_MS);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 }
+
+// ===== TRỢ LÝ AI =====
+// Dán URL Web App của file TroLyAI.gs (kết thúc bằng /exec) vào đây để bật AI Gemini.
+// Để trống: trợ lý vẫn chạy, trả lời nhanh bằng dữ liệu có sẵn trong app.
+const AI_URL = 'https://script.google.com/macros/s/AKfycbyuNrc58_PelctYNCn3k1NQjCiZd8iis2ah5rrwJ7iGafRarXJ-Xw0UW8FlXfYkRlqW/exec';
+const AI_SUGGEST=['Cách tính điểm thi đua?','Lớp nào đứng nhất tuần này?','Đi trễ bị trừ mấy điểm?','Hôm nay có bao nhiêu vi phạm?','Phong trào đang diễn ra?','Làm sao tạo tài khoản?'];
+let aiHist=[],aiBusy=false;
+
+const nrm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
+const hasW=(q,...ws)=>ws.some(w=>q.includes(w));
+
+// Xếp hạng tuần (cùng cách tính với bảng "Thi đua tuần")
+function weekStats(iso){
+  const [from,to]=weekRange(iso||today());
+  const inW=x=>x.date>=from&&x.date<=to;
+  const classes=new Set([...data.violations,...data.bonuses].map(x=>x.cls).filter(Boolean));
+  const rows=[...classes].map(c=>{
+    const v=data.violations.filter(x=>x.cls===c&&inW(x)),b=data.bonuses.filter(x=>x.cls===c&&inW(x));
+    const minus=v.reduce((a,x)=>a+(Number(x.pts)||0),0),plus=b.reduce((a,x)=>a+(Number(x.pts)||0),0);
+    return {cls:c,nv:v.length,plus,minus,total:BASE_SCORE+plus-minus};
+  }).sort((a,b)=>b.total-a.total||a.cls.localeCompare(b.cls));
+  let rank=0,prev=null;
+  rows.forEach((r,i)=>{if(r.total!==prev){rank=i+1;prev=r.total}r.rank=rank});
+  return {from,to,rows};
+}
+function todayByClass(){
+  const m={};
+  data.violations.filter(v=>v.date===today()).forEach(v=>{
+    const c=m[v.cls]||(m[v.cls]={soLoi:0,diemTru:0,theoLoi:{}});
+    c.soLoi++;c.diemTru+=Number(v.pts)||0;c.theoLoi[v.type]=(c.theoLoi[v.type]||0)+1;
+  });
+  return m;
+}
+const activeMoves=()=>data.movements.filter(m=>m.end>=today()).sort((a,b)=>a.start.localeCompare(b.start));
+
+// Dữ liệu gửi cho AI: chỉ số liệu tổng hợp theo lớp, KHÔNG gửi tên học sinh
+function aiContext(){
+  const w=weekStats();
+  return {
+    homNay:today(),
+    nguoiHoi:document.body.classList.contains('in')?$('#who').textContent:'Khách (chưa đăng nhập)',
+    diemGoc:BASE_SCORE,
+    loiViPham:TYPES.map(t=>({loi:t[0],diemTru:t[1]})),
+    lyDoCongDiem:REASONS.map(r=>({lyDo:r[0],diemCong:r[1]})),
+    quyDinhBoSung:($('#rl-note').value||'').slice(0,1500),
+    tuanNay:{tu:w.from,den:w.to,xepHang:w.rows.slice(0,40).map(r=>({hang:r.rank,lop:r.cls,soLoi:r.nv,diemCong:r.plus,diemTru:r.minus,tong:r.total}))},
+    viPhamHomNayTheoLop:todayByClass(),
+    phongTrao:data.movements.slice(-15).map(m=>({ten:m.name,batDau:m.start,ketThuc:m.end,noiDung:String(m.desc||'').slice(0,200)}))
+  };
+}
+
+// Trả lời nhanh không cần AI
+function localAnswer(raw){
+  const q=nrm(raw);
+  const typeKeys=[['di tre','tre gio','den tre'],['dong phuc'],['khan quang','huy hieu'],['trat tu','noi chuyen','on ao'],['dien thoai'],['rac'],['nghi hoc','vang hoc','tron hoc'],['vi pham khac']];
+  const clsM=raw.toUpperCase().match(/\b\d{1,2}[A-Z]\d{0,2}\b/);
+  if(clsM){
+    const c=clsM[0],w=weekStats(),r=w.rows.find(x=>x.cls===c);
+    if(!r)return 'Tuần này ('+vdate(w.from)+' → '+vdate(w.to)+') lớp **'+c+'** chưa có điểm cộng hay vi phạm nào, nên đang giữ nguyên điểm gốc **'+BASE_SCORE+'**.';
+    return 'Lớp **'+c+'** tuần này ('+vdate(w.from)+' → '+vdate(w.to)+'):\n• Hạng: **'+r.rank+'/'+w.rows.length+'**\n• Tổng điểm: **'+r.total+'**\n• Điểm cộng: +'+r.plus+'\n• Vi phạm: '+r.nv+' lỗi (−'+r.minus+')';
+  }
+  if(hasW(q,'xep hang','dung nhat','dung dau','top','hang may','bang xep','lop nao','cao diem nhat')){
+    const w=weekStats();
+    if(!w.rows.length)return 'Tuần này ('+vdate(w.from)+' → '+vdate(w.to)+') chưa có lớp nào được ghi điểm, nên chưa có bảng xếp hạng.';
+    return '🏆 Xếp hạng tuần '+vdate(w.from)+' → '+vdate(w.to)+':\n'+w.rows.slice(0,5).map(r=>(r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':'#'+r.rank)+' **'+r.cls+'**: '+r.total+' điểm').join('\n')+(w.rows.length>5?'\n…xem đầy đủ ở tab "Thi đua tuần".':'');
+  }
+  for(let i=0;i<typeKeys.length;i++){
+    if(hasW(q,...typeKeys[i])&&!hasW(q,'hom nay','bao nhieu vi pham','may vi pham'))
+      return 'Lỗi **'+TYPES[i][0]+'** bị trừ **'+TYPES[i][1]+' điểm** thi đua của lớp.';
+  }
+  if(hasW(q,'cach tinh','tinh diem','diem goc','quy dinh','luat thi dua','tinh the nao','thi dua la gi')){
+    const note=($('#rl-note').value||'').trim();
+    return '📋 **Cách tính điểm thi đua tuần** (thứ Hai → Chủ nhật):\nĐiểm tuần = **'+BASE_SCORE+'** (điểm gốc) + điểm cộng − điểm trừ vi phạm.\n\n**Điểm trừ:**\n'+TYPES.map(t=>'• '+t[0]+': −'+t[1]).join('\n')+'\n\n**Điểm cộng:**\n'+REASONS.map(r=>'• '+r[0]+': +'+r[1]).join('\n')+(note?'\n\n**Quy định bổ sung:**\n'+note:'');
+  }
+  if(hasW(q,'cong diem','diem cong','duoc cong'))
+    return '**Điểm cộng cho lớp:**\n'+REASONS.map(r=>'• '+r[0]+': +'+r[1]).join('\n')+'\n\nĐể cộng điểm: vào tab **🏆 Thi đua tuần** → phần "Cộng điểm thi đua cho lớp", chọn ngày, lớp, lý do rồi bấm **Lưu điểm cộng**.';
+  if(hasW(q,'vi pham','loi')&&hasW(q,'hom nay','bao nhieu','may')){
+    const m=todayByClass(),ks=Object.keys(m).sort();
+    if(!ks.length)return 'Hôm nay ('+vdate(today())+') chưa ghi nhận vi phạm nào. 👍';
+    const tot=ks.reduce((a,k)=>a+m[k].soLoi,0);
+    return 'Hôm nay ('+vdate(today())+') có **'+tot+' lỗi vi phạm**:\n'+ks.map(k=>'• '+k+': '+m[k].soLoi+' lỗi (−'+m[k].diemTru+')').join('\n');
+  }
+  if(hasW(q,'vi pham','ghi loi','nhap loi'))
+    return 'Để ghi vi phạm: vào tab **📝 Vi phạm** → chọn ngày, nhập lớp, tên học sinh, chọn lỗi (điểm trừ tự điền) → bấm **Lưu vi phạm**. Muốn xem lại ngày khác, đổi ô "Xem ngày" bên dưới.';
+  if(hasW(q,'phong trao')){
+    if(hasW(q,'tao','them','lam sao','cach'))return 'Vào tab **🚩 Phong trào** → nhập tên, ngày bắt đầu, ngày kết thúc và nội dung → bấm **Tạo phong trào**.';
+    const a=activeMoves();
+    if(!a.length)return 'Hiện chưa có phong trào nào đang hoặc sắp diễn ra. Có thể tạo mới ở tab **🚩 Phong trào**.';
+    return '🚩 **Phong trào đang/sắp diễn ra:**\n'+a.slice(0,6).map(m=>'• **'+m.name+'** ('+vdate(m.start)+' → '+vdate(m.end)+')'+(m.start>today()?' – sắp diễn ra':'')).join('\n');
+  }
+  if(hasW(q,'quen mat khau','doi mat khau'))return 'Nếu quên mật khẩu, bạn hãy liên hệ quản trị viên của trường để được đặt lại.';
+  if(hasW(q,'tao tai khoan','dang ky','dang ki'))return 'Ở màn hình đăng nhập, bấm **Tạo tài khoản** → nhập tên đăng nhập, Gmail, mật khẩu (từ 6 ký tự) → bấm **Lấy mã xác nhận** → nhập mã 6 số → **Xác nhận & tạo tài khoản**.';
+  if(hasW(q,'dang nhap','dang xuat','tai khoan'))return 'Có 2 cách vào app:\n• **Bản demo:** bấm một vai trò (Bí thư Đoàn, Học sinh, Cờ đỏ…), không cần mật khẩu.\n• **Tài khoản trường:** nhập tên đăng nhập và mật khẩu rồi bấm **Đăng nhập**.\nMuốn thoát, bấm **Đăng xuất** ở góc trên.';
+  if(hasW(q,'cai app','cai dat','tai app','man hinh chinh'))return 'Bấm nút **📲 Cài app vào máy** ở màn hình đăng nhập. Nếu không hiện hộp cài đặt: mở menu trình duyệt → **Thêm vào màn hình chính**.';
+  if(hasW(q,'google sheet','dong bo','luu o dau','du lieu'))return useApi?'Dữ liệu đang được lưu và đồng bộ trên Google Sheets của trường, tự cập nhật mỗi 10 giây.':'App chưa nối Google Sheets nên dữ liệu chỉ lưu trên máy này. Khi nối Google Sheets, mọi máy sẽ dùng chung dữ liệu.';
+  if(hasW(q,'cam on','thank'))return 'Không có gì! Cần gì cứ hỏi mình nhé 😊';
+  if(/^(xin )?chao|^hi\b|^hello|^alo/.test(q))return 'Chào bạn! 👋 Mình là Trợ lý Đội. Bạn có thể hỏi về cách tính điểm, xếp hạng tuần, điểm của một lớp (VD: "8A1 bao nhiêu điểm?"), vi phạm hôm nay, phong trào, hoặc cách dùng app.';
+  return null;
+}
+const LOCAL_FALLBACK='Mình chưa hiểu câu này 😅. Bạn thử hỏi:\n• Cách tính điểm thi đua\n• Lớp nào đứng nhất tuần này\n• "8A1 bao nhiêu điểm?"\n• Hôm nay có bao nhiêu vi phạm\n• Phong trào đang diễn ra\n• Cách ghi vi phạm, tạo tài khoản, cài app';
+
+async function askAI(q){
+  const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),30000);
+  try{
+    const r=await fetch(AI_URL,{method:'POST',signal:ctrl.signal,body:JSON.stringify({key:API_KEY,action:'ask',question:q,history:aiHist.slice(-8),context:aiContext()})});
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error||'Lỗi không rõ');
+    return j.answer;
+  }finally{clearTimeout(t)}
+}
+
+const aiFmt=t=>esc(String(t).replace(/^#+\s*/gm,'').replace(/^\s*[*-]\s+/gm,'• ')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+function aiAdd(who,text,tag){
+  const d=document.createElement('div');
+  d.className='ai-msg '+who;
+  d.innerHTML=aiFmt(text)+(tag?'<span class="tag">'+esc(tag)+'</span>':'');
+  $('#aiLog').appendChild(d);$('#aiLog').scrollTop=$('#aiLog').scrollHeight;
+}
+function aiWelcome(){
+  $('#aiLog').innerHTML='';aiHist=[];
+  aiAdd('bot','Chào bạn! 👋 Mình là **Trợ lý Đội**. Hỏi mình về điểm thi đua, xếp hạng, vi phạm, phong trào hoặc cách dùng app nhé.');
+}
+async function aiAsk(q){
+  q=String(q||'').trim();
+  if(!q||aiBusy)return;
+  aiBusy=true;$('#aiSend').disabled=true;$('#aiIn').value='';
+  aiAdd('me',q);
+  const typing=document.createElement('div');typing.className='ai-typing';typing.textContent='Trợ lý đang trả lời…';
+  $('#aiLog').appendChild(typing);$('#aiLog').scrollTop=$('#aiLog').scrollHeight;
+  let ans,tag='';
+  const quick=localAnswer(q);
+  if(AI_URL){
+    try{ans=await askAI(q);tag='Trả lời bởi AI · có thể chưa chính xác'}
+    catch(e){ans=quick||LOCAL_FALLBACK;tag='AI tạm không phản hồi ('+(e.name==='AbortError'?'quá thời gian':e.message)+') · trả lời nhanh'}
+  }else{
+    await new Promise(r=>setTimeout(r,250));
+    ans=quick||LOCAL_FALLBACK;
+  }
+  typing.remove();
+  aiAdd('bot',ans,tag);
+  aiHist.push({role:'user',text:q},{role:'model',text:ans});
+  if(aiHist.length>16)aiHist=aiHist.slice(-16);
+  aiBusy=false;$('#aiSend').disabled=false;
+}
+function aiOpen(open){
+  $('#aiBox').hidden=!open;
+  $('#aiFab').setAttribute('aria-expanded',open);
+  document.body.classList.toggle('ai-open',open);
+  if(open){if(!$('#aiLog').children.length)aiWelcome();setTimeout(()=>$('#aiIn').focus(),50)}
+  else $('#aiFab').focus();
+}
+$('#aiMode').textContent=AI_URL?'AI Gemini · trả lời mọi câu hỏi':'Trả lời nhanh theo dữ liệu app';
+$('#aiSug').innerHTML=AI_SUGGEST.map(s=>'<button type="button">'+esc(s)+'</button>').join('');
+$('#aiSug').querySelectorAll('button').forEach(b=>b.onclick=()=>aiAsk(b.textContent));
+$('#aiFab').onclick=()=>aiOpen($('#aiBox').hidden);
+$('#aiClose').onclick=()=>aiOpen(false);
+$('#aiClear').onclick=aiWelcome;
+$('#aiForm').onsubmit=e=>{e.preventDefault();aiAsk($('#aiIn').value)};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#aiBox').hidden)aiOpen(false)});
 
 // ===== Thu nhỏ cả trang cho vừa khít màn hình (giữ nguyên bố cục) =====
 (function(){
