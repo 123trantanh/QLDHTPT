@@ -409,7 +409,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGpr4mJYtXVXgNYtn4m-6a5YJ40Ru4qmGFzsA_vdrZTcjr5wVGXOprOvTtgllSIUDOAw/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbx6y4K-b1KUSBtQ9rxeIKRx6aYiYSl-kQaO07I9BJdyzBj7Jwh0Ktx-Tmkya7_yYmjkxQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -595,7 +595,7 @@ if(useApi){
 // ===== TRỢ LÝ AI =====
 // Dán URL Web App của file TroLyAI.gs (kết thúc bằng /exec) vào đây để bật AI Gemini.
 // Để trống: trợ lý vẫn chạy, trả lời nhanh bằng dữ liệu có sẵn trong app.
-const AI_URL = 'https://script.google.com/macros/s/AKfycbyuNrc58_PelctYNCn3k1NQjCiZd8iis2ah5rrwJ7iGafRarXJ-Xw0UW8FlXfYkRlqW/exec';
+const AI_URL = 'https://script.google.com/macros/s/AKfycby0GKRYHu3ubJsnw70myaxJ73Mkh1lDyTQrK6ayYD8sjBt6DKnUudJognJhaU5DkgQ/exec';
 const AI_SUGGEST=['Cách tính điểm thi đua?','Lớp nào đứng nhất tuần này?','Đi trễ bị trừ mấy điểm?','Hôm nay có bao nhiêu vi phạm?','Phong trào đang diễn ra?','Làm sao tạo tài khoản?'];
 let aiHist=[],aiBusy=false;
 
