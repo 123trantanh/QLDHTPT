@@ -99,6 +99,9 @@ select option{color:#111}
 .weekbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
 .weekbar .sum{margin-left:auto}
 .ok{color:#15803d;font-weight:600}
+/* Vừa một màn hình: giữ nguyên bố cục, cả trang được thu nhỏ bằng JS bên dưới */
+html,body{height:100%;overflow:hidden}
+body.fitscroll{overflow:auto}
 </style>
 </head>
 <body>
@@ -359,7 +362,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbw7A43wJbM27PH0y2bt5-kHcwy3779ht9_vxC76ABTcYbqP2swGqiVfjxTgX3wzpkk5hA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbxP_KbJuUORPd__prN13YebKQkmv85j6VoxvMYX9jPQtskdn5oAYUK8pIlKa_B4IdWFFg/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -542,10 +545,45 @@ if(useApi){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 }
 
+// ===== Thu nhỏ cả trang cho vừa khít màn hình (giữ nguyên bố cục) =====
+(function(){
+  const MIN=0.45; // không thu nhỏ quá 45% để chữ còn đọc được
+  const wrap=document.querySelector('.wrap');
+  const canZoom=window.CSS&&CSS.supports&&CSS.supports('zoom','0.5');
+  const apply=z=>{
+    if(canZoom)wrap.style.zoom=z<1?z:'';
+    else{wrap.style.transformOrigin='top center';wrap.style.transform=z<1?'scale('+z+')':''}
+  };
+  let raf=0;
+  function fit(){
+    raf=0;
+    apply(1);
+    const ih=window.innerHeight;
+    let z=1;
+    for(let i=0;i<5;i++){
+      const h=wrap.getBoundingClientRect().height;
+      if(h<=ih+1)break;
+      z=Math.max(MIN,z*ih/h*.995);apply(z);
+      if(z===MIN)break;
+    }
+    // Nếu nội dung quá dài (danh sách rất nhiều dòng) thì cho cuộn, tránh bị cắt mất
+    document.body.classList.toggle('fitscroll',wrap.getBoundingClientRect().height>ih+1);
+  }
+  const later=()=>{if(!raf)raf=requestAnimationFrame(fit)};
+  const typing=()=>{const a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)};
+  // Khi bàn phím điện thoại bật lên, không co lại trang
+  addEventListener('resize',()=>{if(!typing())later()});
+  addEventListener('orientationchange',later);
+  addEventListener('load',later);
+  new MutationObserver(later).observe(document.body,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(later).observe(wrap,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','open','aria-selected']});
+  wrap.addEventListener('toggle',later,true);
+  later();
+})();
+
 let deferred;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e});
 $('#install').onclick=()=>{deferred?deferred.prompt():alert('Trên điện thoại: mở menu trình duyệt → "Thêm vào màn hình chính".')};
 </script>
 </body>
 </html>
-
