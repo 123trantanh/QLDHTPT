@@ -239,23 +239,34 @@ $('#t-reg').onclick=()=>show(pending?'verify':'reg');
 
 $('#loginForm').onsubmit=async e=>{
   e.preventDefault();
-  const u=$('#u').value.trim().toLowerCase(),p=$('#p').value;
-  if(!u||!p){say($('#msg'),'Vui lòng nhập tên đăng nhập và mật khẩu.');return}
-  if(u==='admin'&&p==='123456'){say($('#msg'),'');enter('Quản trị viên');return}
+  const u=$('#u').value.trim().toLowerCase(),p=$('#p').value,m=$('#msg');
+  if(!u||!p){say(m,'Vui lòng nhập tên đăng nhập và mật khẩu.');return}
+  if(u==='admin'&&p==='123456'){say(m,'');enter('Quản trị viên');return}
+  if(useApi){
+    say(m,'Đang đăng nhập...',true);
+    try{await apiPost({action:'login',username:u,password:p});say(m,'');enter(u)}
+    catch(err){say(m,err.message)}
+    return;
+  }
   const a=getAcc()[u];
-  if(a&&a.hash===await sha(u+':'+p)){say($('#msg'),'');enter(u)}
-  else say($('#msg'),'Sai tên đăng nhập hoặc mật khẩu.');
+  if(a&&a.hash===await sha(u+':'+p)){say(m,'');enter(u)}
+  else say(m,'Sai tên đăng nhập hoặc mật khẩu.');
 };
 
-// Gửi mã. Bản demo không có máy chủ gửi mail nên hiện mã trong "hộp thư giả lập".
-// Khi có máy chủ thật, thay nội dung hàm này bằng lệnh gọi dịch vụ gửi email.
+// Chế độ cục bộ (chưa nối Google Sheets): hiện mã trong "hộp thư giả lập".
+// Chế độ Google Sheets: máy chủ Apps Script gửi mã thật về Gmail.
 async function sendCode(email,code){
   $('#mailbox').innerHTML='📬 <b>Hộp thư giả lập (bản demo)</b><br>Thư gửi tới '+email.replace(/</g,'&lt;')+': mã xác nhận của bạn là <b>'+code+'</b>';
 }
 function newCode(){const n=crypto.getRandomValues(new Uint32Array(1))[0]%1000000;return String(n).padStart(6,'0')}
 async function issue(){
-  pending.code=newCode();pending.exp=Date.now()+10*60*1000;pending.tries=0;
-  await sendCode(pending.email,pending.code);
+  if(useApi){
+    await apiPost({action:'sendCode',username:pending.user,email:pending.email,password:pending.password});
+    $('#mailbox').innerHTML='📧 Đã gửi mã tới Gmail của bạn. Nếu chưa thấy, hãy kiểm tra mục <b>Thư rác</b>.';
+  }else{
+    pending.code=newCode();pending.exp=Date.now()+10*60*1000;pending.tries=0;
+    await sendCode(pending.email,pending.code);
+  }
   $('#vmail').textContent=pending.email;$('#vc').value='';say($('#vmsg'),'');
 }
 
@@ -265,31 +276,41 @@ $('#regForm').onsubmit=async e=>{
   if(!/^[a-z0-9._-]{3,}$/.test(u)){say(m,'Tên đăng nhập từ 3 ký tự, chỉ gồm chữ không dấu, số, . _ -');return}
   if(!/^[^\s@]+@gmail\.com$/.test(em)){say(m,'Vui lòng nhập địa chỉ Gmail hợp lệ (đuôi @gmail.com).');return}
   if(p.length<6){say(m,'Mật khẩu cần ít nhất 6 ký tự.');return}
-  if(u==='admin'||getAcc()[u]){say(m,'Tên đăng nhập này đã có người dùng.');return}
-  pending={user:u,email:em,hash:await sha(u+':'+p)};
-  await issue();say(m,'');show('verify');
+  if(!useApi&&(u==='admin'||getAcc()[u])){say(m,'Tên đăng nhập này đã có người dùng.');return}
+  pending={user:u,email:em,password:p,hash:useApi?'':await sha(u+':'+p)};
+  say(m,useApi?'Đang gửi mã về Gmail...':'',true);
+  try{await issue();say(m,'');show('verify')}
+  catch(err){pending=null;say(m,err.message)}
 };
-$('#verifyForm').onsubmit=e=>{
+$('#verifyForm').onsubmit=async e=>{
   e.preventDefault();
   const c=$('#vc').value.trim(),m=$('#vmsg');
   if(!pending)return;
-  if(Date.now()>pending.exp){say(m,'Mã đã hết hạn. Bấm "Gửi lại mã".');return}
-  if(pending.tries>=5){say(m,'Nhập sai quá nhiều lần. Bấm "Gửi lại mã" để nhận mã mới.');return}
-  if(c!==pending.code){pending.tries++;say(m,'Mã chưa đúng, vui lòng kiểm tra lại.');return}
-  const a=getAcc();a[pending.user]={email:pending.email,hash:pending.hash};saveAcc(a);
+  if(useApi){
+    try{await apiPost({action:'verify',username:pending.user,code:c})}
+    catch(err){say(m,err.message);return}
+  }else{
+    if(Date.now()>pending.exp){say(m,'Mã đã hết hạn. Bấm "Gửi lại mã".');return}
+    if(pending.tries>=5){say(m,'Nhập sai quá nhiều lần. Bấm "Gửi lại mã" để nhận mã mới.');return}
+    if(c!==pending.code){pending.tries++;say(m,'Mã chưa đúng, vui lòng kiểm tra lại.');return}
+    const a=getAcc();a[pending.user]={email:pending.email,hash:pending.hash};saveAcc(a);
+  }
   $('#u').value=pending.user;$('#p').value='';pending=null;
   show('login');say($('#msg'),'Tạo tài khoản thành công! Hãy nhập mật khẩu để đăng nhập.',true);
   $('#p').focus();
 };
-$('#resend').onclick=async e=>{e.preventDefault();await issue();say($('#vmsg'),'Đã gửi mã mới.',true)};
+$('#resend').onclick=async e=>{
+  e.preventDefault();
+  try{await issue();say($('#vmsg'),'Đã gửi mã mới.',true)}catch(err){say($('#vmsg'),err.message)}
+};
 $('#back').onclick=e=>{e.preventDefault();pending=null;show('reg')};
 $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản trị trường để đặt lại mật khẩu.')};
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbyXLE17oQTuoyySZ2pkeYPSkbVqbR4KglydEDyxAdHgGh-Jgbs2ha7BVKBenlddEr21hA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbyFJ2qnd_26Yg6z6gWe2wZvBO-5qmZ_AjKWBijZc4_uNrFW2bONN6C_mfRQyFTasV3D-w/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
-const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
+const POLL_MS = 5000;                    // tự tải lại dữ liệu mỗi 5 giây
 
 const DK='qld_data';
 const useApi=!!API_URL;
@@ -410,4 +431,5 @@ $('#install').onclick=()=>{deferred?deferred.prompt():alert('Trên điện tho�
 </script>
 </body>
 </html>
+
 
