@@ -1710,9 +1710,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#aiBox').hidden
 
 // ===== Thu nhỏ cả trang cho vừa khít màn hình (giữ nguyên bố cục) =====
 (function(){
-  const MIN=0.45; // không thu nhỏ quá 45% để chữ còn đọc được
+  const MIN=0.60; // không thu nhỏ quá 60% để chữ còn đọc được
   const wrap=document.querySelector('.wrap');
-  const canZoom=window.CSS&&CSS.supports&&CSS.supports('zoom','0.5');
+  const canZoom=window.CSS&&CSS.supports&&CSS.supports('zoom','0.7');
   const apply=z=>{
     if(canZoom)wrap.style.zoom=z<1?z:'';
     else{wrap.style.transformOrigin='top center';wrap.style.transform=z<1?'scale('+z+')':''}
