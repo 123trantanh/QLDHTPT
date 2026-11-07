@@ -86,6 +86,12 @@ select option{color:#111}
 .del{background:none;border:0;color:#c62828;cursor:pointer;font-size:.8rem;font-weight:600;white-space:nowrap}
 .pts{color:#c62828;font-weight:700;white-space:nowrap}
 .filter{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 10px}.sum{font-size:.85rem;font-weight:600;color:var(--navy)}
+/* Danh sách dài: giữ nguyên khung, cuộn lên xuống bên trong */
+#moveList,#violList,#bonusList,#clsList,#rankTable{max-height:55vh;overflow-y:auto;overflow-x:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:4px}
+#rankTable table{min-width:420px}
+#rankTable thead th{position:sticky;top:0;background:#fff;z-index:1}
+#kn,#md,#rl-note{max-height:40vh;overflow-y:auto;resize:vertical}
+.item>div,.stu>span{min-width:0;overflow-wrap:anywhere}
 .empty{color:var(--muted);font-size:.88rem;text-align:center;padding:14px}
 @media (max-width:480px){.row{grid-template-columns:1fr}}
 
@@ -423,7 +429,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbwhcaB-3R8GfUlYiGAKqkXRQucniLrkB3lnOrJ3_iZd8vXbGGoL9V_-2WmTvbCYLqH6AA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbx6y4K-b1KUSBtQ9rxeIKRx6aYiYSl-kQaO07I9BJdyzBj7Jwh0Ktx-Tmkya7_yYmjkxQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
