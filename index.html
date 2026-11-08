@@ -317,19 +317,22 @@ select option{color:#111}
           <div>
             <h3>QUẢN LÝ</h3>
             <div class="grid1">
-              <button class="role" data-role="Bí thư Đoàn"><span class="ic">👔</span><span><b>Tổng phụ trách</b><small>Toàn trường</small></span></button>
-              <button class="role" data-role="Quản lí lớp"><span class="ic">🏫</span><span><b>Ủy viên ban chỉ huy chi đội</b><small></small></span></button>
-              <button class="role" data-role="Ủy viên BCH"><span class="ic">📁</span><span><b>Phụ trách chi đội</b><small></small></span></button>
+              <button class="role" data-role="Tổng phụ trách"><span class="ic">👔</span><span><b>Tổng phụ trách</b><small>Toàn trường</small></span></button>
+              <button class="role" data-role="Liên đội trưởng"><span class="ic">🎖️</span><span><b>Liên đội trưởng</b><small>Ban chỉ huy Liên đội</small></span></button>
+              <button class="role" data-role="Liên đội phó"><span class="ic">🏅</span><span><b>Liên đội phó</b><small>Ban chỉ huy Liên đội</small></span></button>
+              <button class="role" data-role="Ủy viên BCH"><span class="ic">📋</span><span><b>Ủy viên BCH</b><small>Ban chỉ huy Liên đội</small></span></button>
+              <button class="role" data-role="Ủy viên ban chỉ huy chi đội"><span class="ic">🏫</span><span><b>Ủy viên ban chỉ huy chi đội</b><small></small></span></button>
+              <button class="role" data-role="Phụ trách chi đội"><span class="ic">📁</span><span><b>Phụ trách chi đội</b><small></small></span></button>
             </div>
           </div>
           <div>
             <h3>HỌC SINH</h3>
-            <div class="grid2">
+            <div class="grid1">
               <button class="role" data-role="Học sinh"><span class="ic">🎓</span><span><b>Học sinh</b><small>Đội viên</small></span></button>
-              <button class="role" data-role="Lớp trưởng"><span class="ic">👑</span><span><b>Chi đội trưởng</b><small>Lớp trưởng</small></span></button>
-              <button class="role" data-role="Bí thư Chi đoàn"><span class="ic">🎗️</span><span><b>Chi đội phó</b><small>Cán sự lớp</small></span></button>
+              <button class="role" data-role="Chi đội trưởng"><span class="ic">👑</span><span><b>Chi đội trưởng</b><small>Lớp trưởng</small></span></button>
+              <button class="role" data-role="Chi đội phó"><span class="ic">🎗️</span><span><b>Chi đội phó</b><small>Cán sự lớp</small></span></button>
               <button class="role" data-role="Cờ đỏ lớp"><span class="ic">🚩</span><span><b>Cờ đỏ lớp</b><small>Chấm thi đua</small></span></button>
-              <button class="role span2" data-role="Cờ đỏ trực cổng"><span class="ic">🚪</span><span><b>Cờ đỏ trực cổng</b><small>Ghi vi phạm nề nếp và đi trễ ở cổng trường</small></span></button>
+              <button class="role" data-role="Cờ đỏ trực cổng"><span class="ic">🚪</span><span><b>Cờ đỏ trực cổng</b><small>Ghi vi phạm nề nếp và đi trễ ở cổng trường</small></span></button>
             </div>
           </div>
         </div>
@@ -404,14 +407,19 @@ $('#logout').onclick=()=>{curRole=null;document.body.classList.remove('in');$('#
 // Tab không có trong danh sách: chỉ xem. Tài khoản trường (đăng nhập tên + mật khẩu): sửa được tất cả, như cũ.
 const ALL_TABS=['pMove','pViol','pRank','pStu'];
 const ROLE_PERMS={
-  'Bí thư Đoàn':     ALL_TABS,
-  'Quản lí lớp':     ALL_TABS,
-  'Ủy viên BCH':     ALL_TABS,
-  'Lớp trưởng':      ALL_TABS,
-  'Bí thư Chi đoàn': ALL_TABS,
-  'Học sinh':        [],                  // chỉ xem, không được làm gì
-  'Cờ đỏ lớp':       ['pViol'],           // chỉ ghi vi phạm
-  'Cờ đỏ trực cổng': ['pViol','pStu']     // ghi vi phạm + danh sách học sinh
+  // QUẢN LÝ
+  'Tổng phụ trách':              ALL_TABS,
+  'Liên đội trưởng':             ALL_TABS,
+  'Liên đội phó':                ALL_TABS,
+  'Ủy viên BCH':                 ALL_TABS,
+  'Ủy viên ban chỉ huy chi đội': ALL_TABS,
+  'Phụ trách chi đội':           ALL_TABS,
+  // HỌC SINH
+  'Học sinh':                    [],                  // chỉ xem, không được làm gì
+  'Chi đội trưởng':              ALL_TABS,
+  'Chi đội phó':                 ALL_TABS,
+  'Cờ đỏ lớp':                   ['pViol'],           // chỉ ghi vi phạm
+  'Cờ đỏ trực cổng':             ['pViol','pStu']     // ghi vi phạm + danh sách học sinh
 };
 let curRole=null;
 const TAB_OF={movements:'pMove',violations:'pViol',bonuses:'pRank',students:'pStu'};
@@ -1186,7 +1194,7 @@ function localAnswer(raw){
   }
   if(hasW(q,'quen mat khau','doi mat khau'))return 'Nếu quên mật khẩu, bạn hãy liên hệ quản trị viên của trường để được đặt lại.';
   if(hasW(q,'tao tai khoan','dang ky','dang ki'))return 'Ở màn hình đăng nhập, bấm **Tạo tài khoản** → nhập tên đăng nhập, Gmail, mật khẩu (từ 6 ký tự) → bấm **Lấy mã xác nhận** → nhập mã 6 số → **Xác nhận & tạo tài khoản**.';
-  if(hasW(q,'dang nhap','dang xuat','tai khoan'))return 'Có 2 cách vào app:\n• **Bản demo:** bấm một vai trò (Bí thư Đoàn, Học sinh, Cờ đỏ…), không cần mật khẩu.\n• **Tài khoản trường:** nhập tên đăng nhập và mật khẩu rồi bấm **Đăng nhập**.\nMuốn thoát, bấm **Đăng xuất** ở góc trên.';
+  if(hasW(q,'dang nhap','dang xuat','tai khoan'))return 'Có 2 cách vào app:\n• **Bản demo:** bấm một vai trò (Tổng phụ trách, Liên đội trưởng, Học sinh, Cờ đỏ…), không cần mật khẩu.\n• **Tài khoản trường:** nhập tên đăng nhập và mật khẩu rồi bấm **Đăng nhập**.\nMuốn thoát, bấm **Đăng xuất** ở góc trên.';
   if(hasW(q,'cai app','cai dat','tai app','man hinh chinh'))return 'Bấm nút **📲 Cài app vào máy** ở màn hình đăng nhập. Nếu không hiện hộp cài đặt: mở menu trình duyệt → **Thêm vào màn hình chính**.';
   if(hasW(q,'google sheet','dong bo','luu o dau','du lieu'))return useApi?'Dữ liệu đang được lưu và đồng bộ trên Google Sheets của trường, tự cập nhật mỗi 10 giây.':'App chưa nối Google Sheets nên dữ liệu chỉ lưu trên máy này. Khi nối Google Sheets, mọi máy sẽ dùng chung dữ liệu.';
   if(hasW(q,'cam on','thank'))return 'Không có gì! Cần gì cứ hỏi mình nhé 😊';
