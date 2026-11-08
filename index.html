@@ -652,22 +652,22 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
           <div>
             <h3>QUẢN LÝ</h3>
             <div class="grid1">
-              <button class="role" data-role="Tổng phụ trách"><span class="ic">👔</span><span><b>Tổng phụ trách</b><small>Toàn trường</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Liên đội trưởng"><span class="ic">🎖️</span><span><b>Liên đội trưởng</b><small>Ban chỉ huy Liên đội</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Liên đội phó"><span class="ic">🏅</span><span><b>Liên đội phó</b><small>Ban chỉ huy Liên đội</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Ủy viên BCH"><span class="ic">📋</span><span><b>Ủy viên BCH</b><small>Ban chỉ huy Liên đội</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Ủy viên ban chỉ huy chi đội"><span class="ic">🏫</span><span><b>Ủy viên ban chỉ huy chi đội</b><small></small><em class="holder"></em></span></button>
-              <button class="role" data-role="Phụ trách chi đội"><span class="ic">📁</span><span><b>Phụ trách chi đội</b><small></small><em class="holder"></em></span></button>
+              <button class="role" data-role="Tổng phụ trách"><span class="ic">👔</span><span><b>Tổng phụ trách</b><small>Toàn trường</small></span></button>
+              <button class="role" data-role="Liên đội trưởng"><span class="ic">🎖️</span><span><b>Liên đội trưởng</b><small>Ban chỉ huy Liên đội</small></span></button>
+              <button class="role" data-role="Liên đội phó"><span class="ic">🏅</span><span><b>Liên đội phó</b><small>Ban chỉ huy Liên đội</small></span></button>
+              <button class="role" data-role="Ủy viên BCH"><span class="ic">📋</span><span><b>Ủy viên BCH</b><small>Ban chỉ huy Liên đội</small></span></button>
+              <button class="role" data-role="Ủy viên ban chỉ huy chi đội"><span class="ic">🏫</span><span><b>Ủy viên ban chỉ huy chi đội</b><small></small></span></button>
+              <button class="role" data-role="Phụ trách chi đội"><span class="ic">📁</span><span><b>Phụ trách chi đội</b><small></small></span></button>
             </div>
           </div>
           <div>
             <h3>HỌC SINH</h3>
             <div class="grid1">
-              <button class="role" data-role="Học sinh"><span class="ic">🎓</span><span><b>Học sinh</b><small>Đội viên</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Chi đội trưởng"><span class="ic">👑</span><span><b>Chi đội trưởng</b><small>Lớp trưởng</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Chi đội phó"><span class="ic">🎗️</span><span><b>Chi đội phó</b><small>Cán sự lớp</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Cờ đỏ lớp"><span class="ic">🚩</span><span><b>Cờ đỏ lớp</b><small>Chấm thi đua</small><em class="holder"></em></span></button>
-              <button class="role" data-role="Cờ đỏ trực cổng"><span class="ic">🚪</span><span><b>Cờ đỏ trực cổng</b><small>Ghi vi phạm nề nếp và đi trễ ở cổng trường</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Học sinh"><span class="ic">🎓</span><span><b>Học sinh</b><small>Đội viên</small></span></button>
+              <button class="role" data-role="Chi đội trưởng"><span class="ic">👑</span><span><b>Chi đội trưởng</b><small>Lớp trưởng</small></span></button>
+              <button class="role" data-role="Chi đội phó"><span class="ic">🎗️</span><span><b>Chi đội phó</b><small>Cán sự lớp</small></span></button>
+              <button class="role" data-role="Cờ đỏ lớp"><span class="ic">🚩</span><span><b>Cờ đỏ lớp</b><small>Chấm thi đua</small></span></button>
+              <button class="role" data-role="Cờ đỏ trực cổng"><span class="ic">🚪</span><span><b>Cờ đỏ trực cổng</b><small>Ghi vi phạm nề nếp và đi trễ ở cổng trường</small></span></button>
             </div>
           </div>
         </div>
@@ -882,7 +882,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbyntWNexjvxqh8z81e6XQxxCdhkmCYQKGjjrR4dhtTUzI0CMYaTulLpWP7fmBLfDCgLfQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbw0gvQME1QZv13Tne_fPmXpffIl08LpjYnTLaExuY8PxBGgEkp97eYQucCOGhtGq8IHgQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 1000;                    // tự tải lại dữ liệu mỗi 10 giây
 
