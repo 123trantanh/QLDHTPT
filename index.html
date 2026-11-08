@@ -194,7 +194,7 @@ select option{color:#111}
       <h2>Lỗi vi phạm trong ngày</h2>
       <form id="violForm" class="row">
         <div class="field"><label for="vd">Ngày</label><input id="vd" type="date"></div>
-        <div class="field"><label for="vcl">Lớp</label><input id="vcl" placeholder="VD: 8A1" list="cls-list"></div>
+        <div class="field"><label for="vcl">Lớp</label><input id="vcl" placeholder="VD: 9/9 hoặc 8A1" list="cls-list"></div>
         <div class="field full"><label for="vn">Học sinh vi phạm</label><input id="vn" placeholder="Họ và tên" list="stu-list" autocomplete="off"><div class="hint" id="vnhint"></div><datalist id="stu-list"></datalist></div>
         <div class="field"><label for="vt">Lỗi vi phạm</label><select id="vt"></select></div>
         <div class="field"><label for="vp">Điểm trừ</label><input id="vp" type="number" min="0" max="300" value="2"></div>
@@ -232,7 +232,7 @@ select option{color:#111}
       <h3>Cộng điểm thi đua cho lớp</h3>
       <form id="bonusForm" class="row">
         <div class="field"><label for="bd">Ngày</label><input id="bd" type="date"></div>
-        <div class="field"><label for="bcl">Lớp</label><input id="bcl" placeholder="VD: 8A1" list="cls-list"></div>
+        <div class="field"><label for="bcl">Lớp</label><input id="bcl" placeholder="VD: 9/9 hoặc 8A1" list="cls-list"></div>
         <div class="field"><label for="br">Lý do</label><select id="br"></select></div>
         <div class="field"><label for="bp">Điểm cộng</label><input id="bp" type="number" min="1" max="300" value="5"></div>
         <div class="field full"><label for="bnote">Ghi chú</label><input id="bnote" placeholder="Không bắt buộc"></div>
@@ -255,7 +255,7 @@ select option{color:#111}
 
       <h3>Thêm học sinh</h3>
       <form id="stuForm" class="row">
-        <div class="field"><label for="sfc">Lớp</label><input id="sfc" placeholder="VD: 8A1" list="cls-list"></div>
+        <div class="field"><label for="sfc">Lớp</label><input id="sfc" placeholder="VD: 9/9 hoặc 8A1" list="cls-list"></div>
         <div class="field"><label for="sfg">Giới tính</label><select id="sfg"><option>Nam</option><option>Nữ</option></select></div>
         <div class="field full"><label for="sfn">Họ và tên</label><input id="sfn" placeholder="VD: Nguyễn Văn An" maxlength="80"></div>
         <div class="msg full" id="sfmsg" role="alert"></div>
@@ -270,7 +270,7 @@ select option{color:#111}
 8A1	Trần Thị Bình	Nữ</pre>
           <p style="margin:0 0 8px">Nếu chỉ có cột họ tên, chọn lớp ở ô "Lớp mặc định". Dòng tiêu đề và cột STT tự được bỏ qua.</p>
           <div class="row">
-            <div class="field"><label for="sic">Lớp mặc định</label><input id="sic" placeholder="VD: 8A1" list="cls-list"></div>
+            <div class="field"><label for="sic">Lớp mặc định</label><input id="sic" placeholder="VD: 9/9 hoặc 8A1" list="cls-list"></div>
             <div class="field" style="display:flex;align-items:flex-end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 10px;font-weight:600"><input type="checkbox" id="sirep" style="width:auto"> Thay danh sách cũ của các lớp này</label></div>
           </div>
           <textarea id="sit" rows="6" placeholder="Dán danh sách vào đây..."></textarea>
@@ -488,6 +488,8 @@ const pad=n=>String(n).padStart(2,'0');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
 const nowStr=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())};
 const vdate=iso=>String(iso).split('-').reverse().join('/');
+// Chuẩn hóa tên lớp: " 9 / 9 " → "9/9", "8a1" → "8A1"
+const normCls=t=>String(t||'').trim().toUpperCase().replace(/\s*([\/.\-])\s*/g,'/').replace(/\s+/g,'');
 
 let data={movements:[],violations:[],bonuses:[]};
 const loadLocal=()=>{try{return Object.assign({movements:[],violations:[],bonuses:[]},JSON.parse(localStorage.getItem(DK)))}catch(e){return {movements:[],violations:[],bonuses:[]}}};
@@ -583,7 +585,7 @@ $('#moveForm').onsubmit=async e=>{
 $('#vf').onchange=renderViol;
 $('#violForm').onsubmit=async e=>{
   e.preventDefault();
-  const date=$('#vd').value,cls=$('#vcl').value.trim().toUpperCase(),name=$('#vn').value.trim(),m=$('#vmsg2');
+  const date=$('#vd').value,cls=normCls($('#vcl').value),name=$('#vn').value.trim(),m=$('#vmsg2');
   if(!date||!cls||!name){say(m,'Vui lòng nhập ngày, lớp và tên học sinh.');return}
   if(await put('violations',{id:Date.now(),date,cls,name,type:$('#vt').value,pts:Math.max(0,+$('#vp').value||0),note:$('#vnote').value.trim(),by:$('#who').textContent},m)){
     $('#vn').value='';$('#vnote').value='';$('#vf').value=date;say(m,'Đã lưu vi phạm.',true);updateStuHint();$('#vn').focus();
@@ -645,7 +647,7 @@ function renderRank(){
 $('#wd').onchange=renderRank;
 $('#bonusForm').onsubmit=async e=>{
   e.preventDefault();
-  const date=$('#bd').value,cls=$('#bcl').value.trim().toUpperCase(),m=$('#bmsg');
+  const date=$('#bd').value,cls=normCls($('#bcl').value),m=$('#bmsg');
   const pts=Math.max(0,+$('#bp').value||0);
   if(!date||!cls){say(m,'Vui lòng nhập ngày và lớp.');return}
   if(!pts){say(m,'Điểm cộng phải lớn hơn 0.');return}
@@ -657,7 +659,8 @@ $('#bonusForm').onsubmit=async e=>{
 // ===== DANH SÁCH HỌC SINH =====
 // Lưu trên máy này (localStorage). Muốn dùng ở máy khác: "Tải về file Excel" rồi "Mở file .csv" ở máy kia.
 const SK='qld_students';
-const CLS_RE=/^\d{1,2}[A-Za-z]\d{0,2}$/;
+// Tên lớp hợp lệ: kiểu khối/lớp (9/9, 6/12) hoặc kiểu chữ (6A1, 8A3, 9A)
+const CLS_RE=/^\d{1,2}(?:\/\d{1,2}|[A-Za-z]{1,2}\d{0,2})$/;
 const normName=t=>String(t||'').normalize('NFC').replace(/\s+/g,' ').trim();
 const titleName=t=>normName(t).toLowerCase().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
 const keyName=t=>normName(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d');
@@ -750,7 +753,7 @@ $('#sq').oninput=renderStu;
 
 // Gợi ý tên học sinh khi ghi vi phạm
 function updateStuHint(){
-  const c=$('#vcl').value.trim().toUpperCase(),list=c?inClass(c):[];
+  const c=normCls($('#vcl').value),list=c?inClass(c):[];
   const pool=list.length?list:(c?[]:students.list);
   $('#stu-list').innerHTML=pool.slice(0,600).map(s=>'<option value="'+esc(s.name)+'">'+(list.length?'':esc(s.cls))+'</option>').join('');
   $('#vnhint').textContent=!c?'Gõ tên để tìm, lớp sẽ tự điền.':list.length?'Lớp '+c+' có '+list.length+' học sinh, gõ vài chữ để chọn tên.':'Lớp '+c+' chưa có trong danh sách học sinh, vẫn nhập tên tự do được.';
@@ -766,8 +769,8 @@ $('#vn').addEventListener('change',()=>{
 // Thêm 1 học sinh
 $('#stuForm').onsubmit=e=>{
   e.preventDefault();
-  const c=$('#sfc').value.trim().toUpperCase(),n=titleName($('#sfn').value),m=$('#sfmsg');
-  if(!CLS_RE.test(c)){say(m,'Nhập lớp đúng dạng, VD: 6A1, 8A3.');return}
+  const c=normCls($('#sfc').value),n=titleName($('#sfn').value),m=$('#sfmsg');
+  if(!CLS_RE.test(c)){say(m,'Nhập lớp đúng dạng, VD: 9/9, 6/12 hoặc 6A1, 8A3.');return}
   if(n.split(' ').length<2){say(m,'Nhập đầy đủ họ và tên.');return}
   if(students.list.some(s=>s.cls===c&&keyName(s.name)===keyName(n))){say(m,n+' đã có trong lớp '+c+'.');return}
   students.list.push({id:sid(),cls:c,name:n,gender:$('#sfg').value});
@@ -786,7 +789,8 @@ function parseRoster(text,defCls){
     if(/ho (va )?ten|^stt\b|^lop\b/.test(low))return; // dòng tiêu đề
     let cls='',gender='';
     cells=cells.filter(x=>{
-      if(!cls&&CLS_RE.test(x)){cls=x.toUpperCase();return false}
+      if(!cls&&CLS_RE.test(normCls(x))){cls=normCls(x);return false}
+      if(/^\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}$/.test(x))return false; // cột ngày sinh
       if(!gender&&/^(nam|nữ|nu)$/i.test(x)){gender=/^nam$/i.test(x)?'Nam':'Nữ';return false}
       if(/^\d+$/.test(x))return false; // cột STT
       return true;
@@ -802,8 +806,9 @@ function importRoster(text,defCls,replace,msgEl){
   const {out,bad}=parseRoster(text,defCls);
   if(!out.length){say(msgEl,'Không đọc được học sinh nào. '+(defCls?'':'Nếu chỉ có cột họ tên, hãy nhập "Lớp mặc định".'));return false}
   if(students.sample){
-    if(!confirm('Đang dùng danh sách MẪU (tên giả định).\nXóa danh sách mẫu và dùng danh sách vừa nhập?\n\nBấm "Hủy" để giữ danh sách mẫu và thêm vào chung.')){students.sample=true}
-    else{students.list=[];students.sample=false}
+    if(confirm('Đang dùng danh sách MẪU (tên giả định).\nXóa các học sinh mẫu và dùng danh sách vừa nhập?\n(Học sinh anh/chị tự thêm vẫn được giữ.)\n\nBấm "Hủy" để giữ danh sách mẫu và thêm vào chung.')){
+      students.list=students.list.filter(s=>!String(s.id).startsWith('m'));students.sample=false;
+    }
   }
   const cls=new Set(out.map(s=>s.cls));
   if(replace)students.list=students.list.filter(s=>!cls.has(s.cls));
@@ -817,8 +822,8 @@ function importRoster(text,defCls,replace,msgEl){
   return true;
 }
 $('#siBtn').onclick=()=>{
-  const d=$('#sic').value.trim().toUpperCase();
-  if(d&&!CLS_RE.test(d)){say($('#simsg'),'Lớp mặc định chưa đúng dạng, VD: 8A1.');return}
+  const d=normCls($('#sic').value);
+  if(d&&!CLS_RE.test(d)){say($('#simsg'),'Lớp mặc định chưa đúng dạng, VD: 9/9 hoặc 8A1.');return}
   if(importRoster($('#sit').value,d,$('#sirep').checked,$('#simsg')))$('#sit').value='';
 };
 
@@ -916,7 +921,9 @@ function aiContext(){
 function localAnswer(raw){
   const q=nrm(raw);
   const typeKeys=[['di tre','tre gio','den tre'],['dong phuc'],['khan quang','huy hieu'],['trat tu','noi chuyen','on ao'],['dien thoai'],['rac'],['nghi hoc','vang hoc','tron hoc'],['vi pham khac']];
-  const clsM=raw.toUpperCase().match(/\b\d{1,2}[A-Z]\d{0,2}\b/);
+  const known=new Set([...students.list,...data.violations,...data.bonuses].map(x=>x.cls));
+  const clsM=(()=>{const all=[...raw.toUpperCase().matchAll(/(^|[^\d\/])(\d{1,2}(?:\s*\/\s*\d{1,2}|[A-Z]{1,2}\d{0,2}))(?![\d\/A-Z])/g)].map(m=>normCls(m[2]));
+    const c=all.find(x=>known.has(x))||all.find(x=>/[A-Z]/.test(x));return c?[c]:null})();
   if(hasW(q,'si so','bao nhieu hoc sinh','may hoc sinh','bao nhieu em','danh sach hoc sinh','bao nhieu hs')){
     if(clsM){const n=students.list.filter(s=>s.cls===clsM[0]).length;
       return n?'Lớp **'+clsM[0]+'** có **'+n+' học sinh** ('+students.list.filter(s=>s.cls===clsM[0]&&s.gender==='Nữ').length+' nữ). Xem danh sách ở tab **👥 Học sinh**.':'Lớp **'+clsM[0]+'** chưa có trong danh sách học sinh. Thêm ở tab **👥 Học sinh**.'}
