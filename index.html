@@ -280,9 +280,9 @@ select option{color:#111}
       </details>
 
       <div class="stu-tools">
-        <button type="button" class="ghost" id="sExp">⬇️ Tải về file Excel (.csv)</button>
-        <button type="button" class="ghost" id="sImpBtn">⬆️ Mở file .csv</button>
-        <input type="file" id="sImpFile" accept=".csv,.txt,text/csv,text/plain" hidden>
+        <button type="button" class="ghost" id="sExp">⬇️ Tải về file Excel (.xlsx)</button>
+        <button type="button" class="ghost" id="sImpBtn">⬆️ Mở file Excel / CSV</button>
+        <input type="file" id="sImpFile" accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain" hidden>
         <button type="button" class="ghost" id="sSample">🔄 Nạp lại danh sách mẫu</button>
         <button type="button" class="ghost danger" id="sClear">🗑️ Xóa toàn bộ</button>
       </div>
@@ -657,7 +657,7 @@ $('#bonusForm').onsubmit=async e=>{
 };
 
 // ===== DANH SÁCH HỌC SINH =====
-// Lưu trên máy này (localStorage). Muốn dùng ở máy khác: "Tải về file Excel" rồi "Mở file .csv" ở máy kia.
+// Lưu trên máy này (localStorage). Muốn dùng ở máy khác: "Tải về file Excel" rồi "Mở file Excel / CSV" ở máy kia.
 const SK='qld_students';
 // Tên lớp hợp lệ: kiểu khối/lớp (9/9, 6/12) hoặc kiểu chữ (6A1, 8A3, 9A)
 const CLS_RE=/^\d{1,2}(?:\/\d{1,2}|[A-Za-z]{1,2}\d{0,2})$/;
@@ -719,7 +719,7 @@ function renderStu(){
   $('#sc').value=cls.includes(cur)?cur:(cls[0]||'');
   const nam=students.list.filter(s=>s.gender==='Nam').length,nu=students.list.filter(s=>s.gender==='Nữ').length;
   $('#ssum').innerHTML='<b>'+cls.length+'</b> lớp · <b>'+students.list.length.toLocaleString('vi-VN')+'</b> học sinh ('+nam+' nam, '+nu+' nữ)'+(students.sample?'<span class="badge-sample">Danh sách mẫu · tên giả định</span>':'');
-  $('#sStore').textContent='Danh sách lưu trên máy này. Muốn dùng ở máy khác: bấm "Tải về file Excel" rồi mở file đó ở máy kia bằng "Mở file .csv".';
+  $('#sStore').textContent='Danh sách lưu trên máy này. Muốn dùng ở máy khác: bấm "Tải về file Excel" rồi mở file đó ở máy kia bằng "Mở file Excel / CSV".';
 
   const q=keyName($('#sq').value),vc=weekViolCount();
   let rows,search=!!q;
@@ -786,7 +786,7 @@ function parseRoster(text,defCls){
     if(!line.trim())return;
     let cells=line.split(line.includes('\t')?'\t':line.includes(';')?';':',').map(x=>normName(x.replace(/^"|"$/g,''))).filter(Boolean);
     const low=keyName(cells.join(' '));
-    if(/ho (va )?ten|^stt\b|^lop\b/.test(low))return; // dòng tiêu đề
+    if(/ho (va )?ten|^stt\b|^lop\b|danh sach/.test(low))return; // dòng tiêu đề
     let cls='',gender='';
     cells=cells.filter(x=>{
       if(!cls&&CLS_RE.test(normCls(x))){cls=normCls(x);return false}
@@ -813,12 +813,14 @@ function importRoster(text,defCls,replace,msgEl){
   const cls=new Set(out.map(s=>s.cls));
   if(replace)students.list=students.list.filter(s=>!cls.has(s.cls));
   const have=new Set(students.list.map(s=>s.cls+'|'+keyName(s.name)));
-  let add=0,dup=0;
-  out.forEach(s=>{const k=s.cls+'|'+keyName(s.name);if(have.has(k)){dup++;return}have.add(k);students.list.push({id:sid(),cls:s.cls,name:s.name,gender:s.gender});add++});
+  let add=0,dup=0,fix=0;
+  out.forEach(s=>{const k=s.cls+'|'+keyName(s.name);
+    if(have.has(k)){dup++;const o=students.list.find(x=>x.cls===s.cls&&keyName(x.name)===keyName(s.name));if(o&&!o.gender&&s.gender){o.gender=s.gender;fix++}return}
+    have.add(k);students.list.push({id:sid(),cls:s.cls,name:s.name,gender:s.gender});add++});
   if(!saveStudents())return false;
   updateClassList();$('#sq').value='';renderStu();
   if(cls.size===1){$('#sc').value=[...cls][0];renderStu()}
-  say(msgEl,'Đã thêm '+add+' học sinh vào '+cls.size+' lớp'+(dup?', bỏ qua '+dup+' em đã có':'')+(bad.length?', '+bad.length+' dòng không đọc được (dòng '+bad.slice(0,8).join(', ')+(bad.length>8?'…':'')+')':'')+'.',true);
+  say(msgEl,'Đã thêm '+add+' học sinh vào '+cls.size+' lớp'+(dup?', bỏ qua '+dup+' em đã có':'')+(fix?' (bổ sung giới tính cho '+fix+' em)':'')+(bad.length?', '+bad.length+' dòng không đọc được (dòng '+bad.slice(0,8).join(', ')+(bad.length>8?'…':'')+')':'')+'.',true);
   return true;
 }
 $('#siBtn').onclick=()=>{
@@ -827,22 +829,112 @@ $('#siBtn').onclick=()=>{
   if(importRoster($('#sit').value,d,$('#sirep').checked,$('#simsg')))$('#sit').value='';
 };
 
-// Xuất / mở file CSV (Excel mở được, giữ tiếng Việt)
+// ===== File Excel (.xlsx) — tự tạo / tự đọc, không cần thư viện ngoài =====
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+// Gói nhiều file thành 1 file .zip (kiểu "store", không nén) — file .xlsx thực chất là file zip
+function zipStore(files){
+  const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  const d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  files.forEach(f=>{
+    const name=enc.encode(f.name),data=typeof f.data==='string'?enc.encode(f.data):f.data,crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));
+    [[0,0x04034b50,4],[4,20,2],[6,0x0800,2],[8,0,2],[10,tm,2],[12,dt,2],[14,crc,4],[18,data.length,4],[22,data.length,4],[26,name.length,2],[28,0,2]]
+      .forEach(([o,v,n])=>n===4?h.setUint32(o,v,true):h.setUint16(o,v,true));
+    const c=new DataView(new ArrayBuffer(46));
+    [[0,0x02014b50,4],[4,20,2],[6,20,2],[8,0x0800,2],[10,0,2],[12,tm,2],[14,dt,2],[16,crc,4],[20,data.length,4],[24,data.length,4],[28,name.length,2],[30,0,2],[32,0,2],[34,0,2],[36,0,2],[38,0,4],[42,off,4]]
+      .forEach(([o,v,n])=>n===4?c.setUint32(o,v,true):c.setUint16(o,v,true));
+    parts.push(new Uint8Array(h.buffer),name,data);central.push(new Uint8Array(c.buffer),name);
+    off+=30+name.length+data.length;
+  });
+  const csize=central.reduce((a,x)=>a+x.length,0),e=new DataView(new ArrayBuffer(22));
+  [[0,0x06054b50,4],[4,0,2],[6,0,2],[8,files.length,2],[10,files.length,2],[12,csize,4],[16,off,4],[20,0,2]]
+    .forEach(([o,v,n])=>n===4?e.setUint32(o,v,true):e.setUint16(o,v,true));
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xmlEsc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+const colName=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
+// rows: mảng các dòng, dòng đầu là tiêu đề (in đậm, cố định khi cuộn, có nút lọc)
+function makeXlsx(rows,widths,sheetName){
+  const n=rows.length,w=rows[0].length;
+  const cell=(v,r,c)=>{const ref=colName(c)+(r+1),st=r===0?' s="1"':'';
+    return typeof v==='number'?'<c r="'+ref+'"'+st+'><v>'+v+'</v></c>':'<c r="'+ref+'"'+st+' t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(v)+'</t></is></c>'};
+  const sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+    '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+
+    '<cols>'+widths.map((x,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+x+'" customWidth="1"/>').join('')+'</cols><sheetData>'+
+    rows.map((row,r)=>'<row r="'+(r+1)+'">'+row.map((v,c)=>cell(v,r,c)).join('')+'</row>').join('')+
+    '</sheetData><autoFilter ref="A1:'+colName(w-1)+n+'"/></worksheet>';
+  const sn=xmlEsc(String(sheetName||'Sheet1').replace(/[\\\/?*\[\]:]/g,' ').slice(0,31));
+  return zipStore([
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+sn+'" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\''+sn.replace(/'/g,"''")+'\'!$A$1:$'+colName(w-1)+'$'+n+'</definedName></definedNames></workbook>'},
+    {name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/styles.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F7"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'},
+    {name:'xl/worksheets/sheet1.xml',data:sheet}
+  ]);
+}
+// Đọc trang tính đầu tiên của file .xlsx → văn bản, mỗi dòng các ô cách nhau bằng Tab
+async function readXlsx(buf){
+  const u=new Uint8Array(buf),v=new DataView(buf),dec=new TextDecoder();
+  let e=-1;for(let i=u.length-22;i>=Math.max(0,u.length-65558);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
+  if(e<0)throw new Error('File không phải dạng Excel .xlsx');
+  const entries={};let p=v.getUint32(e+16,true);
+  for(let k=0,n=v.getUint16(e+10,true);k<n;k++){
+    const method=v.getUint16(p+10,true),size=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),el=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true);
+    entries[dec.decode(u.subarray(p+46,p+46+nl))]={method,size,lo};p+=46+nl+el+cl;
+  }
+  const get=async name=>{
+    const f=entries[name];if(!f)return null;
+    const start=f.lo+30+v.getUint16(f.lo+26,true)+v.getUint16(f.lo+28,true),raw=u.subarray(start,start+f.size);
+    if(f.method===0)return dec.decode(raw);
+    if(f.method!==8)throw new Error('File Excel dùng kiểu nén không hỗ trợ');
+    if(typeof DecompressionStream==='undefined')throw new Error('Trình duyệt quá cũ, không đọc được .xlsx. Hãy cập nhật trình duyệt hoặc lưu file dạng CSV');
+    return dec.decode(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  };
+  const X=t=>new DOMParser().parseFromString(t,'application/xml');
+  const all=(doc,tag)=>[...doc.getElementsByTagNameNS('*',tag)];
+  let sheetPath='xl/worksheets/sheet1.xml';
+  try{
+    const wb=X(await get('xl/workbook.xml')),first=all(wb,'sheet')[0];
+    const rid=first&&(first.getAttribute('r:id')||[...first.attributes].find(a=>a.localName==='id')?.value);
+    const rel=all(X(await get('xl/_rels/workbook.xml.rels')),'Relationship').find(r=>r.getAttribute('Id')===rid);
+    if(rel){const t=rel.getAttribute('Target');sheetPath=t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,'')}
+  }catch(err){}
+  const ssx=await get('xl/sharedStrings.xml');
+  const shared=ssx?all(X(ssx),'si').map(si=>all(si,'t').map(t=>t.textContent).join('')):[];
+  const sx=await get(sheetPath);if(!sx)throw new Error('Không tìm thấy trang tính trong file');
+  return all(X(sx),'row').map(row=>all(row,'c').map(c=>{
+    const t=c.getAttribute('t'),val=all(c,'v')[0];
+    if(t==='s')return shared[+(val&&val.textContent)]||'';
+    if(t==='inlineStr')return all(c,'t').map(x=>x.textContent).join('');
+    return val?val.textContent:'';
+  }).join('\t')).join('\n');
+}
+
+// Tải danh sách về máy: file Excel thật, mỗi nội dung một cột
 $('#sExp').onclick=()=>{
-  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
-  const rows=students.list.slice().sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b));
-  const csv='﻿'+['Lớp,Họ và tên,Giới tính'].concat(rows.map(s=>[s.cls,s.name,s.gender||''].map(q).join(','))).join('\r\n');
+  const list=students.list.slice().sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b));
+  if(!list.length){say($('#sfmsg'),'Danh sách đang trống, chưa có gì để tải về.');return}
+  let stt=0,prev='';
+  const rows=[['STT','Lớp','Họ và tên','Giới tính']].concat(list.map(x=>{stt=x.cls===prev?stt+1:1;prev=x.cls;return [stt,x.cls,x.name,x.gender||'']}));
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download='danh-sach-hoc-sinh-'+today()+'.csv';
-  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+  a.href=URL.createObjectURL(makeXlsx(rows,[6,10,34,11],'Danh sách học sinh'));
+  a.download='danh-sach-hoc-sinh-'+today()+'.xlsx';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
 };
 $('#sImpBtn').onclick=()=>$('#sImpFile').click();
 $('#sImpFile').onchange=async()=>{
-  const f=$('#sImpFile').files[0];if(!f)return;
-  const text=await f.text();$('#sImpFile').value='';
-  importRoster(text,'',false,$('#sfmsg'));
-  $('#sfmsg').scrollIntoView({block:'center'});
+  const f=$('#sImpFile').files[0],m=$('#sfmsg');if(!f)return;
+  $('#sImpFile').value='';
+  try{
+    let text;
+    if(/\.xlsx$/i.test(f.name))text=await readXlsx(await f.arrayBuffer());
+    else if(/\.xls$/i.test(f.name))throw new Error('File .xls (Excel đời cũ) chưa đọc được. Trong Excel chọn Tệp → Lưu thành → "Sổ làm việc Excel (.xlsx)" rồi mở lại');
+    else text=await f.text();
+    importRoster(text,'',false,m);
+  }catch(err){say(m,'Không đọc được file: '+err.message)}
+  m.scrollIntoView({block:'center'});
 };
 $('#sSample').onclick=()=>{
   if(!confirm('Thay toàn bộ danh sách hiện tại bằng danh sách MẪU (25 lớp, 1.050 học sinh tên giả định)?'))return;
