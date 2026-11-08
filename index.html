@@ -151,6 +151,10 @@ select option{color:#111}
 .ai-form input{flex:1;padding:10px 12px;font-size:16px;border-radius:99px}
 .ai-form button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--blue);color:#fff;font-size:1.1rem;cursor:pointer}
 .ai-form button:disabled{opacity:.5;cursor:default}
+/* Chế độ chỉ xem (phân quyền) */
+.ro-note{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:#fff3c4;color:#7a5600;font-size:.85rem;font-weight:600;border:1px solid #f0d27a}
+.panel.ro input:disabled,.panel.ro select:disabled,.panel.ro textarea:disabled{opacity:.55;cursor:not-allowed;background:#eef2f7}
+.panel.ro button:disabled,.panel button.go:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:480px){
   .ai-box{right:8px;left:8px;width:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));height:min(600px,calc(100dvh - 16px))}
   body.ai-open .ai-fab{display:none}
@@ -178,6 +182,7 @@ select option{color:#111}
 
     <section id="pMove" class="panel card">
       <h2>Tạo phong trào của nhà trường</h2>
+      <div class="ro-note" role="status" hidden></div>
       <form id="moveForm" class="row">
         <div class="field full"><label for="mn">Tên phong trào</label><input id="mn" placeholder="VD: Em yêu trường em"></div>
         <div class="field"><label for="ms">Bắt đầu</label><input id="ms" type="date"></div>
@@ -192,6 +197,7 @@ select option{color:#111}
 
     <section id="pViol" class="panel card" hidden>
       <h2>Lỗi vi phạm trong ngày</h2>
+      <div class="ro-note" role="status" hidden></div>
       <form id="violForm" class="row">
         <div class="field"><label for="vd">Ngày</label><input id="vd" type="date"></div>
         <div class="field"><label for="vcl">Lớp</label><input id="vcl" placeholder="VD: 9/9 hoặc 8A1" list="cls-list"></div>
@@ -207,6 +213,7 @@ select option{color:#111}
     </section>
     <section id="pRank" class="panel card" hidden>
       <h2>Thi đua tuần giữa các lớp</h2>
+      <div class="ro-note" role="status" hidden></div>
       <div class="weekbar">
         <label for="wd" style="margin:0">Chọn một ngày trong tuần</label>
         <input id="wd" type="date" style="width:auto">
@@ -246,6 +253,7 @@ select option{color:#111}
 
     <section id="pStu" class="panel card" hidden>
       <h2>Danh sách học sinh</h2>
+      <div class="ro-note" role="status" hidden></div>
       <div class="stu-top">
         <select id="sc" aria-label="Chọn lớp"></select>
         <input id="sq" type="search" placeholder="🔎 Tìm tên học sinh ở mọi lớp" aria-label="Tìm học sinh">
@@ -386,9 +394,51 @@ select option{color:#111}
 
 <script>
 const $=s=>document.querySelector(s);
-const enter=name=>{$('#who').textContent=name;document.body.classList.add('in');window.scrollTo(0,0)};
-document.querySelectorAll('.role').forEach(b=>b.onclick=()=>enter(b.dataset.role));
-$('#logout').onclick=()=>{document.body.classList.remove('in');$('#u').value='';$('#p').value=''};
+// role: vai trò khi vào bằng bản demo; null = tài khoản trường / quản trị viên (sửa được tất cả, như cũ)
+const enter=(name,role=null)=>{curRole=role;$('#who').textContent=name;document.body.classList.add('in');applyPerms();window.scrollTo(0,0)};
+document.querySelectorAll('.role').forEach(b=>b.onclick=()=>enter(b.dataset.role,b.dataset.role));
+$('#logout').onclick=()=>{curRole=null;document.body.classList.remove('in');$('#u').value='';$('#p').value=''};
+
+// ===== PHÂN QUYỀN =====
+// Mỗi vai trò bản demo được sửa những tab nào (pMove = Phong trào, pViol = Vi phạm, pRank = Thi đua tuần, pStu = Học sinh).
+// Tab không có trong danh sách: chỉ xem. Tài khoản trường (đăng nhập tên + mật khẩu): sửa được tất cả, như cũ.
+const ALL_TABS=['pMove','pViol','pRank','pStu'];
+const ROLE_PERMS={
+  'Bí thư Đoàn':     ALL_TABS,
+  'Quản lí lớp':     ALL_TABS,
+  'Ủy viên BCH':     ALL_TABS,
+  'Lớp trưởng':      ALL_TABS,
+  'Bí thư Chi đoàn': ALL_TABS,
+  'Học sinh':        [],                  // chỉ xem, không được làm gì
+  'Cờ đỏ lớp':       ['pViol'],           // chỉ ghi vi phạm
+  'Cờ đỏ trực cổng': ['pViol','pStu']     // ghi vi phạm + danh sách học sinh
+};
+let curRole=null;
+const TAB_OF={movements:'pMove',violations:'pViol',bonuses:'pRank',students:'pStu'};
+const TAB_NAME={pMove:'Phong trào',pViol:'Vi phạm',pRank:'Thi đua tuần',pStu:'Học sinh'};
+function canEdit(tab){
+  if(!curRole)return true;
+  return (ROLE_PERMS[curRole]||[]).includes(tab); // vai trò lạ (không có trong bảng): chỉ xem
+}
+const denyMsg=tab=>'Vai trò "'+curRole+'" chỉ được xem mục '+TAB_NAME[tab]+', không được thêm, sửa hay xóa.';
+const VIEW_OK='#vf,#wd,#sc,#sq,#sExp'; // xem theo ngày/tuần/lớp, tìm kiếm, tải về: ai cũng dùng được
+function applyPerms(){
+  ['pMove','pViol','pRank','pStu'].forEach(tab=>{
+    const sec=$('#'+tab);if(!sec)return;
+    const ok=canEdit(tab),note=sec.querySelector('.ro-note');
+    sec.classList.toggle('ro',!ok);
+    if(note){note.hidden=ok;if(!ok)note.textContent='🔒 Chế độ chỉ xem: '+denyMsg(tab)}
+    sec.querySelectorAll('input,select,textarea,button').forEach(el=>{
+      if(el.matches(VIEW_OK))return;
+      const lock=el.classList.contains('go')?!canEdit('pViol'):!ok; // nút "Ghi lỗi" theo quyền tab Vi phạm
+      if(el.disabled!==lock)el.disabled=lock;
+    });
+  });
+}
+// Danh sách được vẽ lại thường xuyên (đồng bộ 10 giây) → khóa lại các nút mới sinh ra
+let _permRaf=0;
+new MutationObserver(()=>{if(!_permRaf)_permRaf=requestAnimationFrame(()=>{_permRaf=0;applyPerms()})})
+  .observe($('#app'),{childList:true,subtree:true});
 
 $('#eye').onclick=()=>{const p=$('#p');p.type=p.type==='password'?'text':'password'};
 const KEY='qld_accounts';
@@ -479,9 +529,9 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbx0j5acN9z9geTtkFZxuSJIjv2MKbp8KjXTkTrsT6l8Hdryd3UFK4SOAel7o8TIBP9n3Q/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbw0gvQME1QZv13Tne_fPmXpffIl08LpjYnTLaExuY8PxBGgEkp97eYQucCOGhtGq8IHgQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
-const POLL_MS = 5000;                    // tự tải lại dữ liệu mỗi 10 giây
+const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
 const DK='qld_data';
 const useApi=!!API_URL;
@@ -530,6 +580,7 @@ async function refresh(){
 }
 
 async function put(col,obj,msgEl){
+  if(!canEdit(TAB_OF[col])){say(msgEl,denyMsg(TAB_OF[col]));return false}
   if(!useApi){data[col].push(obj);saveLocal();render();return true}
   busy++;
   data[col].push(obj);render();
@@ -543,6 +594,7 @@ async function put(col,obj,msgEl){
   }finally{busy--;refresh()}
 }
 async function remove(col,id){
+  if(!canEdit(TAB_OF[col]))return;
   if(!useApi){data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render();return}
   busy++;
   const backup=data[col];
@@ -609,6 +661,7 @@ let rlDirty=false;
 try{if(!useApi)$('#rl-note').value=localStorage.getItem('rules_note')||''}catch(e){}
 $('#rl-note').oninput=()=>{rlDirty=true};
 $('#rl-save').onclick=async()=>{
+  if(!canEdit('pRank')){$('#rl-msg').textContent=denyMsg('pRank');return}
   const t=$('#rl-note').value;
   try{
     if(useApi)await apiPost({action:'setRules',text:t});else localStorage.setItem('rules_note',t);
@@ -732,6 +785,7 @@ function afterStu(){updateClassList();renderStu();updateStuHint()}
 
 // Ghi thay đổi: thêm (adds) và xóa (delIds). Thêm trước, xóa sau để lỡ lỗi giữa chừng cũng không mất dữ liệu.
 async function stuApply(adds,delIds,msgEl){
+  if(!canEdit('pStu')){say(msgEl,denyMsg('pStu'));return false}
   const del=new Set(delIds.map(String));
   const apply=list=>list.filter(x=>!del.has(String(x.id))).concat(adds);
   if(!useApi){localStu=apply(localStu);if(!saveLocalStu())return false;afterStu();return true}
@@ -793,7 +847,7 @@ function renderStu(){
     '</tbody></table>';
   const byId=id=>students.list.find(x=>String(x.id)===id);
   $('#stuTable').querySelectorAll('.go').forEach(b=>b.onclick=()=>{
-    const s=byId(b.dataset.id);if(!s)return;
+    const s=byId(b.dataset.id);if(!s||!canEdit('pViol'))return;
     document.querySelector('.atab[data-p="pViol"]').click();
     $('#vcl').value=s.cls;$('#vn').value=s.name;updateStuHint();
     say($('#vmsg2'),'Đã điền '+s.name+' ('+s.cls+'). Chọn lỗi rồi bấm "Lưu vi phạm".',true);
