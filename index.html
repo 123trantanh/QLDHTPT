@@ -406,7 +406,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbzj1K3E4FGGnk4i-qGnHs7RcUJnrmI9z9GhnQT3K05IWudH9qD5QvCV9d6liE2RGqvQOg/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbwQQq5BkqXkhXmL2a25Dk-LjGCP8KXTwAxJbG_4hvxP6lyurmgI0h7CSBpiMfb7mkYC3g/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -595,7 +595,7 @@ if(useApi){
 //            Để trống: trợ lý vẫn chạy, trả lời nhanh bằng dữ liệu có sẵn trong app.
 // AI_SECRET: phải GIỐNG HỆT dòng  const SECRET = '...'  trong TroLyAI.gs
 // =====================================================================
-const AI_URL = 'https://script.google.com/macros/s/AKfycby0v6P1QASNmlTZncfv26XbLXAns2Cp5TA0o0ogzBhqfM_akN1x-YBogOMpAqxg4EIn/exec';
+const AI_URL = 'https://script.google.com/macros/s/AKfycby6Azer9leZ6nBMX44cfVoNgScyfYspKzGawkQJdvhswunNN0oAEwmN_LLu2EBVmJBXhg/exec';
 const AI_SECRET = 'anh15032012';
 const AI_URL_OK = /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec(\?.*)?$/.test(AI_URL.trim());
 const AI_SUGGEST=['Cách tính điểm thi đua?','Lớp nào đứng nhất tuần này?','Đi trễ bị trừ mấy điểm?','Hôm nay có bao nhiêu vi phạm?','Phong trào đang diễn ra?','Làm sao tạo tài khoản?'];
