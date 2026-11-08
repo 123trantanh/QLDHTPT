@@ -251,6 +251,7 @@ select option{color:#111}
         <input id="sq" type="search" placeholder="🔎 Tìm tên học sinh ở mọi lớp" aria-label="Tìm học sinh">
       </div>
       <p class="stu-sum" id="ssum"></p>
+      <div id="sMig"></div>
       <div class="tblwrap"><div id="stuTable"></div></div>
 
       <h3>Thêm học sinh</h3>
@@ -283,7 +284,8 @@ select option{color:#111}
         <button type="button" class="ghost" id="sExp">⬇️ Tải về file Excel (.xlsx)</button>
         <button type="button" class="ghost" id="sImpBtn">⬆️ Mở file Excel / CSV</button>
         <input type="file" id="sImpFile" accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain" hidden>
-        <button type="button" class="ghost" id="sSample">🔄 Nạp lại danh sách mẫu</button>
+        <button type="button" class="ghost" id="sSample">🔄 Nạp danh sách mẫu</button>
+        <button type="button" class="ghost" id="sDelSample" hidden>🧹 Xóa danh sách mẫu</button>
         <button type="button" class="ghost danger" id="sClear">🗑️ Xóa toàn bộ</button>
       </div>
       <p class="hint" id="sStore"></p>
@@ -477,7 +479,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbwQQq5BkqXkhXmL2a25Dk-LjGCP8KXTwAxJbG_4hvxP6lyurmgI0h7CSBpiMfb7mkYC3g/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbx0j5acN9z9geTtkFZxuSJIjv2MKbp8KjXTkTrsT6l8Hdryd3UFK4SOAel7o8TIBP9n3Q/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -491,7 +493,7 @@ const vdate=iso=>String(iso).split('-').reverse().join('/');
 // Chuẩn hóa tên lớp: " 9 / 9 " → "9/9", "8a1" → "8A1"
 const normCls=t=>String(t||'').trim().toUpperCase().replace(/\s*([\/.\-])\s*/g,'/').replace(/\s+/g,'');
 
-let data={movements:[],violations:[],bonuses:[]};
+let data={movements:[],violations:[],bonuses:[],students:[]};
 const loadLocal=()=>{try{return Object.assign({movements:[],violations:[],bonuses:[]},JSON.parse(localStorage.getItem(DK)))}catch(e){return {movements:[],violations:[],bonuses:[]}}};
 const saveLocal=()=>{try{localStorage.setItem(DK,JSON.stringify(data))}catch(e){}};
 const setSync=(t,ok)=>{const e=$('#sync');if(e){e.textContent=t;e.style.color=ok?'#15803d':'#b45309'}};
@@ -520,6 +522,7 @@ async function refresh(){
     data.movements=(j.movements||[]).sort((a,b)=>a.id-b.id);
     data.violations=(j.violations||[]).sort((a,b)=>a.id-b.id);
     data.bonuses=(j.bonuses||[]).sort((a,b)=>a.id-b.id);
+    if(Array.isArray(j.students)){data.students=j.students.map(normStu);stuLoaded=true}
     if(typeof j.rules==='string'&&document.activeElement!==$('#rl-note')&&!rlDirty)$('#rl-note').value=j.rules;
     render();
     setSync('đã đồng bộ Google Sheets lúc '+nowStr(),true);
@@ -657,8 +660,11 @@ $('#bonusForm').onsubmit=async e=>{
 };
 
 // ===== DANH SÁCH HỌC SINH =====
-// Lưu trên máy này (localStorage). Muốn dùng ở máy khác: "Tải về file Excel" rồi "Mở file Excel / CSV" ở máy kia.
+// Đã nối Google Sheets: lưu ở trang tính "HocSinh", mọi máy dùng chung.
+// Chưa nối Google Sheets: lưu trên máy này (localStorage).
 const SK='qld_students';
+const SAMPLE_BY='Danh sách mẫu';          // cột "by" của học sinh mẫu (tên giả định)
+const isSample=s=>s.by===SAMPLE_BY;
 // Tên lớp hợp lệ: kiểu khối/lớp (9/9, 6/12) hoặc kiểu chữ (6A1, 8A3, 9A)
 const CLS_RE=/^\d{1,2}(?:\/\d{1,2}|[A-Za-z]{1,2}\d{0,2})$/;
 const normName=t=>String(t||'').normalize('NFC').replace(/\s+/g,' ').trim();
@@ -667,7 +673,11 @@ const keyName=t=>normName(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'
 const lastWord=n=>{const a=normName(n).split(' ');return a[a.length-1]||''};
 const viSort=(a,b)=>lastWord(a.name).localeCompare(lastWord(b.name),'vi')||a.name.localeCompare(b.name,'vi');
 const clsSort=(a,b)=>a.localeCompare(b,'vi',{numeric:true});
-const sid=()=>'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let _seq=0;
+const newStuId=()=>(Date.now()-1700000000000)*10000+(_seq++%10000); // mã số không trùng
+const normStu=s=>({id:Number(s.id),cls:normCls(s.cls),name:normName(s.name),gender:String(s.gender||''),by:String(s.by||'')});
+const who=()=>$('#who').textContent||'';
+let stuLoaded=!useApi;
 
 // Danh sách mẫu: 25 lớp × 42 = 1.050 học sinh, tên giả định (tạo cố định, lần nào cũng giống nhau)
 function sampleStudents(){
@@ -687,20 +697,30 @@ function sampleStudents(){
     while(seen.size<42){
       const nu=rnd()<.5,dem=nu?pick(DEM_NU):pick(DEM_NAM),ten=nu?pick(TEN_NU):pick(TEN_NAM),name=pick(HO)+' '+dem+' '+ten;
       if(dem===ten||seen.has(name))continue;
-      seen.add(name);out.push({id:'m'+c+'-'+seen.size,cls:c,name,gender:nu?'Nữ':'Nam'});
+      seen.add(name);out.push({id:newStuId(),cls:c,name,gender:nu?'Nữ':'Nam',by:SAMPLE_BY});
     }
   });
   return out;
 }
 
-let students=(()=>{
-  try{const s=JSON.parse(localStorage.getItem(SK));if(s&&Array.isArray(s.list))return s}catch(e){}
-  return {sample:true,list:sampleStudents()};
+// Danh sách đang lưu trên máy (dùng khi chưa nối Google Sheets; đã nối thì chỉ để chuyển lên Sheets)
+let localStu=(()=>{
+  try{
+    const s=JSON.parse(localStorage.getItem(SK));
+    if(s&&Array.isArray(s.list))return s.list.map(x=>{
+      const o=normStu(x);
+      if(String(x.id).startsWith('m'))o.by=SAMPLE_BY;        // dữ liệu bản cũ
+      if(!Number.isFinite(o.id))o.id=newStuId();
+      return o;
+    });
+  }catch(e){}
+  return useApi?[]:sampleStudents();
 })();
-function saveStudents(){
-  try{localStorage.setItem(SK,JSON.stringify(students));return true}
+function saveLocalStu(){
+  try{localStorage.setItem(SK,JSON.stringify({list:localStu}));return true}
   catch(e){$('#sStore').textContent='⚠️ Không lưu được trên máy này (trình duyệt chặn lưu trữ hoặc đầy bộ nhớ).';return false}
 }
+const students={get list(){return useApi?data.students:localStu},get sample(){return this.list.some(isSample)}};
 const classesOf=()=>[...new Set(students.list.map(s=>s.cls))].sort(clsSort);
 const inClass=c=>students.list.filter(s=>s.cls===c).sort(viSort);
 function weekViolCount(){
@@ -708,26 +728,62 @@ function weekViolCount(){
   data.violations.forEach(v=>{if(v.date>=from&&v.date<=to){const k=v.cls+'|'+keyName(v.name);m[k]=(m[k]||0)+1}});
   return m;
 }
+function afterStu(){updateClassList();renderStu();updateStuHint()}
+
+// Ghi thay đổi: thêm (adds) và xóa (delIds). Thêm trước, xóa sau để lỡ lỗi giữa chừng cũng không mất dữ liệu.
+async function stuApply(adds,delIds,msgEl){
+  const del=new Set(delIds.map(String));
+  const apply=list=>list.filter(x=>!del.has(String(x.id))).concat(adds);
+  if(!useApi){localStu=apply(localStu);if(!saveLocalStu())return false;afterStu();return true}
+  busy++;
+  const backup=data.students;
+  data.students=apply(data.students);afterStu();
+  try{
+    for(let i=0;i<adds.length;i+=300)
+      await apiPost({action:'addMany',type:'students',data:adds.slice(i,i+300).map(x=>({id:x.id,cls:x.cls,name:x.name,by:x.by||'',gender:x.gender||''}))});
+    if(delIds.length===1)await apiPost({action:'delete',type:'students',id:delIds[0]});
+    else if(delIds.length)await apiPost({action:'deleteMany',type:'students',ids:delIds});
+    return true;
+  }catch(e){
+    data.students=backup;afterStu();
+    say(msgEl,'Không lưu được lên Google Sheets: '+(/Hành động không hợp lệ/.test(e.message)?'Code.gs chưa được cập nhật bản mới. Dán Code.gs mới vào Apps Script rồi triển khai phiên bản mới.':e.message));
+    return false;
+  }finally{busy--;refresh()}
+}
 
 function renderStu(){
   if(!$('#stuTable'))return;
-  const cls=classesOf(),cur=$('#sc').value;
+  const list=students.list,cls=classesOf(),cur=$('#sc').value;
   // Ô chọn lớp, nhóm theo khối
   const groups={};cls.forEach(c=>{const k=c.match(/^\d+/)[0];(groups[k]=groups[k]||[]).push(c)});
-  const count=c=>students.list.filter(s=>s.cls===c).length;
+  const count=c=>list.filter(s=>s.cls===c).length;
   $('#sc').innerHTML=cls.length?Object.keys(groups).sort((a,b)=>a-b).map(k=>'<optgroup label="Khối '+esc(k)+'">'+groups[k].map(c=>'<option value="'+esc(c)+'">'+esc(c)+' ('+count(c)+' HS)</option>').join('')+'</optgroup>').join(''):'<option value="">Chưa có lớp</option>';
   $('#sc').value=cls.includes(cur)?cur:(cls[0]||'');
-  const nam=students.list.filter(s=>s.gender==='Nam').length,nu=students.list.filter(s=>s.gender==='Nữ').length;
-  $('#ssum').innerHTML='<b>'+cls.length+'</b> lớp · <b>'+students.list.length.toLocaleString('vi-VN')+'</b> học sinh ('+nam+' nam, '+nu+' nữ)'+(students.sample?'<span class="badge-sample">Danh sách mẫu · tên giả định</span>':'');
-  $('#sStore').textContent='Danh sách lưu trên máy này. Muốn dùng ở máy khác: bấm "Tải về file Excel" rồi mở file đó ở máy kia bằng "Mở file Excel / CSV".';
+  const nam=list.filter(s=>s.gender==='Nam').length,nu=list.filter(s=>s.gender==='Nữ').length,ns=list.filter(isSample).length;
+  $('#ssum').innerHTML='<b>'+cls.length+'</b> lớp · <b>'+list.length.toLocaleString('vi-VN')+'</b> học sinh ('+nam+' nam, '+nu+' nữ)'+(ns?'<span class="badge-sample">'+(ns===list.length?'':ns+' em ')+'Danh sách mẫu · tên giả định</span>':'');
+  $('#sDelSample').hidden=!ns;
+  $('#sStore').textContent=useApi?'☁️ Danh sách lưu trên Google Sheets (trang tính HocSinh), mọi máy dùng chung.':'Danh sách lưu trên máy này. Muốn dùng ở máy khác: bấm "Tải về file Excel" rồi mở file đó ở máy kia bằng "Mở file Excel / CSV".';
+
+  // Đã nối Google Sheets nhưng máy này còn danh sách cũ lưu trên máy → mời đưa lên
+  const pend=useApi&&stuLoaded?localStu.filter(x=>!isSample(x)):[];
+  $('#sMig').innerHTML=pend.length?'<div class="card" style="margin:0 0 10px;padding:10px 12px;border:1px dashed var(--blue)"><b>Máy này còn '+pend.length+' học sinh lưu trên máy</b>, chưa có trên Google Sheets.<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="primary" id="sMigGo" style="width:auto;padding:8px 14px">⬆️ Đưa lên Google Sheets</button><button type="button" class="ghost" id="sMigNo">Bỏ qua</button></div><div class="msg" id="sMigMsg"></div></div>':'';
+  if(pend.length){
+    $('#sMigGo').onclick=async()=>{
+      const have=new Set(data.students.map(x=>x.cls+'|'+keyName(x.name)));
+      const adds=pend.filter(x=>!have.has(x.cls+'|'+keyName(x.name))).map(x=>({id:newStuId(),cls:x.cls,name:x.name,gender:x.gender,by:x.by||who()}));
+      say($('#sMigMsg'),'Đang đưa '+adds.length+' học sinh lên Google Sheets...',true);
+      if(await stuApply(adds,[],$('#sMigMsg'))){localStu=[];saveLocalStu();renderStu();say($('#sfmsg'),'Đã đưa '+adds.length+' học sinh lên Google Sheets.',true)}
+    };
+    $('#sMigNo').onclick=()=>{if(confirm('Xóa '+pend.length+' học sinh đang lưu trên máy này (không đưa lên Google Sheets)?')){localStu=[];saveLocalStu();renderStu()}};
+  }
 
   const q=keyName($('#sq').value),vc=weekViolCount();
   let rows,search=!!q;
-  if(search)rows=students.list.filter(s=>keyName(s.name).includes(q)).sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b));
+  if(search)rows=list.filter(s=>keyName(s.name).includes(q)).sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b));
   else rows=inClass($('#sc').value);
   const shown=rows.slice(0,300);
   if(!rows.length){
-    $('#stuTable').innerHTML='<div class="empty">'+(search?'Không tìm thấy học sinh nào có tên này.':'Chưa có học sinh nào. Thêm học sinh hoặc dán danh sách từ Excel ở bên dưới.')+'</div>';
+    $('#stuTable').innerHTML='<div class="empty">'+(!stuLoaded?'Đang tải danh sách từ Google Sheets...':search?'Không tìm thấy học sinh nào có tên này.':'Chưa có học sinh nào. Thêm học sinh, dán danh sách từ Excel, hoặc bấm "Nạp danh sách mẫu" ở bên dưới.')+'</div>';
     return;
   }
   $('#stuTable').innerHTML=(search?'<p class="hint" style="margin:0 0 6px">Tìm thấy '+rows.length+' học sinh'+(rows.length>shown.length?', hiện '+shown.length+' em đầu':'')+'.</p>':'')+
@@ -735,27 +791,30 @@ function renderStu(){
     shown.map((s,i)=>{const n=vc[s.cls+'|'+keyName(s.name)]||0;
       return '<tr><td>'+(i+1)+'</td>'+(search?'<td class="cl">'+esc(s.cls)+'</td>':'')+'<td class="nm">'+esc(s.name)+'</td><td class="g">'+esc(s.gender||'')+'</td><td class="'+(n?'v1':'v0')+'">'+n+'</td><td class="act"><button class="go" data-id="'+esc(s.id)+'" title="Ghi lỗi cho học sinh này">📝<span class="t"> Ghi lỗi</span></button><button class="del" data-id="'+esc(s.id)+'" title="Xóa khỏi danh sách"><span class="t">Xóa</span><span class="i">🗑️</span></button></td></tr>'}).join('')+
     '</tbody></table>';
+  const byId=id=>students.list.find(x=>String(x.id)===id);
   $('#stuTable').querySelectorAll('.go').forEach(b=>b.onclick=()=>{
-    const s=students.list.find(x=>x.id===b.dataset.id);if(!s)return;
+    const s=byId(b.dataset.id);if(!s)return;
     document.querySelector('.atab[data-p="pViol"]').click();
     $('#vcl').value=s.cls;$('#vn').value=s.name;updateStuHint();
     say($('#vmsg2'),'Đã điền '+s.name+' ('+s.cls+'). Chọn lỗi rồi bấm "Lưu vi phạm".',true);
     $('#vt').focus();
   });
   $('#stuTable').querySelectorAll('.del').forEach(b=>b.onclick=()=>{
-    const s=students.list.find(x=>x.id===b.dataset.id);if(!s)return;
+    const s=byId(b.dataset.id);if(!s)return;
     if(!confirm('Xóa '+s.name+' ('+s.cls+') khỏi danh sách?'))return;
-    students.list=students.list.filter(x=>x.id!==s.id);saveStudents();updateClassList();renderStu();
+    stuApply([],[s.id],$('#sfmsg'));
   });
 }
 $('#sc').onchange=()=>{$('#sq').value='';renderStu()};
 $('#sq').oninput=renderStu;
 
 // Gợi ý tên học sinh khi ghi vi phạm
+let _hintHtml='';
 function updateStuHint(){
   const c=normCls($('#vcl').value),list=c?inClass(c):[];
   const pool=list.length?list:(c?[]:students.list);
-  $('#stu-list').innerHTML=pool.slice(0,600).map(s=>'<option value="'+esc(s.name)+'">'+(list.length?'':esc(s.cls))+'</option>').join('');
+  const html=pool.slice(0,600).map(s=>'<option value="'+esc(s.name)+'">'+(list.length?'':esc(s.cls))+'</option>').join('');
+  if(html!==_hintHtml){$('#stu-list').innerHTML=html;_hintHtml=html} // không vẽ lại khi không đổi (tránh đóng ô gợi ý đang mở)
   $('#vnhint').textContent=!c?'Gõ tên để tìm, lớp sẽ tự điền.':list.length?'Lớp '+c+' có '+list.length+' học sinh, gõ vài chữ để chọn tên.':'Lớp '+c+' chưa có trong danh sách học sinh, vẫn nhập tên tự do được.';
 }
 $('#vcl').addEventListener('input',updateStuHint);
@@ -767,16 +826,17 @@ $('#vn').addEventListener('change',()=>{
 });
 
 // Thêm 1 học sinh
-$('#stuForm').onsubmit=e=>{
+$('#stuForm').onsubmit=async e=>{
   e.preventDefault();
   const c=normCls($('#sfc').value),n=titleName($('#sfn').value),m=$('#sfmsg');
   if(!CLS_RE.test(c)){say(m,'Nhập lớp đúng dạng, VD: 9/9, 6/12 hoặc 6A1, 8A3.');return}
   if(n.split(' ').length<2){say(m,'Nhập đầy đủ họ và tên.');return}
   if(students.list.some(s=>s.cls===c&&keyName(s.name)===keyName(n))){say(m,n+' đã có trong lớp '+c+'.');return}
-  students.list.push({id:sid(),cls:c,name:n,gender:$('#sfg').value});
-  if(!saveStudents())return;
-  $('#sfn').value='';say(m,'Đã thêm '+n+' vào lớp '+c+'.',true);
-  updateClassList();$('#sq').value='';renderStu();$('#sc').value=c;renderStu();$('#sfn').focus();
+  $('#sfn').value='';$('#sq').value='';
+  if(await stuApply([{id:newStuId(),cls:c,name:n,gender:$('#sfg').value,by:who()}],[],m)){
+    say(m,'Đã thêm '+n+' vào lớp '+c+(useApi?' (đã lưu lên Google Sheets).':'.'),true);
+    $('#sc').value=c;renderStu();$('#sfn').focus();
+  }else $('#sfn').value=n;
 };
 
 // Đọc danh sách dán từ Excel / file CSV
@@ -802,31 +862,33 @@ function parseRoster(text,defCls){
   });
   return {out,bad};
 }
-function importRoster(text,defCls,replace,msgEl){
+async function importRoster(text,defCls,replace,msgEl){
   const {out,bad}=parseRoster(text,defCls);
   if(!out.length){say(msgEl,'Không đọc được học sinh nào. '+(defCls?'':'Nếu chỉ có cột họ tên, hãy nhập "Lớp mặc định".'));return false}
-  if(students.sample){
-    if(confirm('Đang dùng danh sách MẪU (tên giả định).\nXóa các học sinh mẫu và dùng danh sách vừa nhập?\n(Học sinh anh/chị tự thêm vẫn được giữ.)\n\nBấm "Hủy" để giữ danh sách mẫu và thêm vào chung.')){
-      students.list=students.list.filter(s=>!String(s.id).startsWith('m'));students.sample=false;
-    }
-  }
+  const del=new Set();
+  if(students.sample&&confirm('Đang có danh sách MẪU (tên giả định).\nXóa các học sinh mẫu và dùng danh sách vừa nhập?\n(Học sinh anh/chị tự thêm vẫn được giữ.)\n\nBấm "Hủy" để giữ danh sách mẫu và thêm vào chung.'))
+    students.list.filter(isSample).forEach(x=>del.add(x.id));
   const cls=new Set(out.map(s=>s.cls));
-  if(replace)students.list=students.list.filter(s=>!cls.has(s.cls));
-  const have=new Set(students.list.map(s=>s.cls+'|'+keyName(s.name)));
-  let add=0,dup=0,fix=0;
-  out.forEach(s=>{const k=s.cls+'|'+keyName(s.name);
-    if(have.has(k)){dup++;const o=students.list.find(x=>x.cls===s.cls&&keyName(x.name)===keyName(s.name));if(o&&!o.gender&&s.gender){o.gender=s.gender;fix++}return}
-    have.add(k);students.list.push({id:sid(),cls:s.cls,name:s.name,gender:s.gender});add++});
-  if(!saveStudents())return false;
-  updateClassList();$('#sq').value='';renderStu();
-  if(cls.size===1){$('#sc').value=[...cls][0];renderStu()}
-  say(msgEl,'Đã thêm '+add+' học sinh vào '+cls.size+' lớp'+(dup?', bỏ qua '+dup+' em đã có':'')+(fix?' (bổ sung giới tính cho '+fix+' em)':'')+(bad.length?', '+bad.length+' dòng không đọc được (dòng '+bad.slice(0,8).join(', ')+(bad.length>8?'…':'')+')':'')+'.',true);
+  if(replace)students.list.filter(x=>cls.has(x.cls)).forEach(x=>del.add(x.id));
+  const keep=students.list.filter(x=>!del.has(x.id));
+  const have=new Map(keep.map(x=>[x.cls+'|'+keyName(x.name),x]));
+  const adds=[];let add=0,dup=0,fix=0;
+  out.forEach(s=>{const k=s.cls+'|'+keyName(s.name),o=have.get(k);
+    if(o){dup++;
+      if(!o.gender&&s.gender&&!del.has(o.id)){del.add(o.id);const n={...o,id:newStuId(),gender:s.gender};adds.push(n);have.set(k,n);fix++}
+      return}
+    const n={id:newStuId(),cls:s.cls,name:s.name,gender:s.gender,by:who()};adds.push(n);have.set(k,n);add++});
+  if(useApi)say(msgEl,'Đang lưu '+adds.length+' học sinh lên Google Sheets...',true);
+  if(!await stuApply(adds,[...del],msgEl))return false;
+  $('#sq').value='';
+  if(cls.size===1){renderStu();$('#sc').value=[...cls][0];renderStu()}
+  say(msgEl,'Đã thêm '+add+' học sinh vào '+cls.size+' lớp'+(dup?', bỏ qua '+dup+' em đã có':'')+(fix?' (bổ sung giới tính cho '+fix+' em)':'')+(bad.length?', '+bad.length+' dòng không đọc được (dòng '+bad.slice(0,8).join(', ')+(bad.length>8?'…':'')+')':'')+(useApi?'. Đã lưu lên Google Sheets.':'.'),true);
   return true;
 }
 $('#siBtn').onclick=()=>{
   const d=normCls($('#sic').value);
   if(d&&!CLS_RE.test(d)){say($('#simsg'),'Lớp mặc định chưa đúng dạng, VD: 9/9 hoặc 8A1.');return}
-  if(importRoster($('#sit').value,d,$('#sirep').checked,$('#simsg')))$('#sit').value='';
+  importRoster($('#sit').value,d,$('#sirep').checked,$('#simsg')).then(ok=>{if(ok)$('#sit').value=''});
 };
 
 // ===== File Excel (.xlsx) — tự tạo / tự đọc, không cần thư viện ngoài =====
@@ -932,19 +994,27 @@ $('#sImpFile').onchange=async()=>{
     if(/\.xlsx$/i.test(f.name))text=await readXlsx(await f.arrayBuffer());
     else if(/\.xls$/i.test(f.name))throw new Error('File .xls (Excel đời cũ) chưa đọc được. Trong Excel chọn Tệp → Lưu thành → "Sổ làm việc Excel (.xlsx)" rồi mở lại');
     else text=await f.text();
-    importRoster(text,'',false,m);
+    await importRoster(text,'',false,m);
   }catch(err){say(m,'Không đọc được file: '+err.message)}
   m.scrollIntoView({block:'center'});
 };
-$('#sSample').onclick=()=>{
-  if(!confirm('Thay toàn bộ danh sách hiện tại bằng danh sách MẪU (25 lớp, 1.050 học sinh tên giả định)?'))return;
-  students={sample:true,list:sampleStudents()};saveStudents();updateClassList();$('#sq').value='';renderStu();
+$('#sSample').onclick=async()=>{
+  const old=students.list.filter(isSample);
+  if(!confirm('Thêm danh sách MẪU 25 lớp, 1.050 học sinh (tên giả định)'+(useApi?' lên Google Sheets':'')+'?\nHọc sinh thật vẫn giữ nguyên'+(old.length?'; danh sách mẫu cũ sẽ được thay mới':'')+'.'))return;
+  say($('#sfmsg'),'Đang nạp danh sách mẫu...',true);
+  if(await stuApply(sampleStudents(),old.map(x=>x.id),$('#sfmsg'))){$('#sq').value='';renderStu();say($('#sfmsg'),'Đã nạp danh sách mẫu.',true)}
 };
-$('#sClear').onclick=()=>{
-  if(!confirm('Xóa TOÀN BỘ '+students.list.length+' học sinh khỏi máy này? Không thể hoàn tác.\n(Nên bấm "Tải về file Excel" trước để giữ bản sao.)'))return;
-  students={sample:false,list:[]};saveStudents();updateClassList();$('#sq').value='';renderStu();
+$('#sDelSample').onclick=async()=>{
+  const old=students.list.filter(isSample);
+  if(!old.length||!confirm('Xóa '+old.length+' học sinh MẪU (tên giả định)? Học sinh thật vẫn giữ nguyên.'))return;
+  if(await stuApply([],old.map(x=>x.id),$('#sfmsg')))say($('#sfmsg'),'Đã xóa danh sách mẫu.',true);
 };
-
+$('#sClear').onclick=async()=>{
+  const all=students.list;
+  if(!all.length)return;
+  if(!confirm('Xóa TOÀN BỘ '+all.length+' học sinh'+(useApi?' trên Google Sheets (mọi máy đều mất)':' khỏi máy này')+'? Không thể hoàn tác.\n(Nên bấm "Tải về file Excel" trước để giữ bản sao.)'))return;
+  if(await stuApply([],all.map(x=>x.id),$('#sfmsg'))){$('#sq').value='';renderStu();say($('#sfmsg'),'Đã xóa toàn bộ danh sách.',true)}
+};
 render();
 if(useApi){
   refresh();
