@@ -100,6 +100,31 @@ select option{color:#111}
 .weekbar .sum{margin-left:auto}
 .ok{color:#15803d;font-weight:600}
 
+/* ===== Danh sách học sinh ===== */
+.atabs{grid-template-columns:repeat(4,1fr)}
+@media (max-width:480px){.atab{padding:9px 4px;font-size:.8rem}}
+.stu-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}
+.stu-top select{width:auto;min-width:130px}
+.stu-top input{flex:1;min-width:180px}
+.stu-sum{font-size:.85rem;color:var(--muted);margin:0 0 10px}
+.stu-sum b{color:var(--navy)}
+.badge-sample{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;background:#fff3c4;color:#8a6100;font-size:.72rem;font-weight:700}
+.rk.stu td,.rk.stu th{padding:7px 6px}
+.rk.stu td.nm{text-align:left;font-weight:600}
+.rk.stu td.v0{color:var(--muted)}
+.rk.stu td.v1{color:#c62828;font-weight:700}
+.rk.stu .act{white-space:nowrap}
+.rk.stu .act button{background:none;border:0;cursor:pointer;font:inherit;font-size:.8rem;font-weight:600;padding:4px 6px}
+.rk.stu .act .go{color:var(--blue)}
+.rk.stu .act .del{color:#c62828}
+.rk.stu .act .i{display:none}
+@media (max-width:480px){.rk.stu .act .i{display:inline}}
+.stu-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.stu-tools .ghost{font-size:.85rem}
+.stu-tools .ghost.danger{border-color:#c62828;color:#c62828}
+.hint{font-size:.76rem;color:var(--muted);margin-top:4px}
+@media (max-width:480px){.rk.stu .g,.rk.stu .act .t{display:none}.rk.stu td,.rk.stu th{padding:7px 3px}.rk.stu .act button{padding:4px 5px;font-size:1rem}.rk.stu th.vc{font-size:.7rem}}
+
 /* ===== Trợ lý AI ===== */
 .ai-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;width:58px;height:58px;border-radius:50%;border:0;
   background:var(--blue);color:#fff;font-size:1.7rem;cursor:pointer;box-shadow:0 8px 22px rgba(30,64,175,.45)}
@@ -148,6 +173,7 @@ select option{color:#111}
       <button class="atab" aria-selected="true" data-p="pMove">🚩 Phong trào</button>
       <button class="atab" aria-selected="false" data-p="pViol">📝 Vi phạm</button>
       <button class="atab" aria-selected="false" data-p="pRank">🏆 Thi đua tuần</button>
+      <button class="atab" aria-selected="false" data-p="pStu">👥 Học sinh</button>
     </div>
 
     <section id="pMove" class="panel card">
@@ -169,7 +195,7 @@ select option{color:#111}
       <form id="violForm" class="row">
         <div class="field"><label for="vd">Ngày</label><input id="vd" type="date"></div>
         <div class="field"><label for="vcl">Lớp</label><input id="vcl" placeholder="VD: 8A1" list="cls-list"></div>
-        <div class="field full"><label for="vn">Học sinh vi phạm</label><input id="vn" placeholder="Họ và tên"></div>
+        <div class="field full"><label for="vn">Học sinh vi phạm</label><input id="vn" placeholder="Họ và tên" list="stu-list" autocomplete="off"><div class="hint" id="vnhint"></div><datalist id="stu-list"></datalist></div>
         <div class="field"><label for="vt">Lỗi vi phạm</label><select id="vt"></select></div>
         <div class="field"><label for="vp">Điểm trừ</label><input id="vp" type="number" min="0" max="300" value="2"></div>
         <div class="field full"><label for="vnote">Ghi chú</label><input id="vnote" placeholder="Không bắt buộc"></div>
@@ -216,6 +242,51 @@ select option{color:#111}
       <h3>Điểm cộng trong tuần</h3>
       <div id="bonusList"></div>
       <datalist id="cls-list"></datalist>
+    </section>
+
+    <section id="pStu" class="panel card" hidden>
+      <h2>Danh sách học sinh</h2>
+      <div class="stu-top">
+        <select id="sc" aria-label="Chọn lớp"></select>
+        <input id="sq" type="search" placeholder="🔎 Tìm tên học sinh ở mọi lớp" aria-label="Tìm học sinh">
+      </div>
+      <p class="stu-sum" id="ssum"></p>
+      <div class="tblwrap"><div id="stuTable"></div></div>
+
+      <h3>Thêm học sinh</h3>
+      <form id="stuForm" class="row">
+        <div class="field"><label for="sfc">Lớp</label><input id="sfc" placeholder="VD: 8A1" list="cls-list"></div>
+        <div class="field"><label for="sfg">Giới tính</label><select id="sfg"><option>Nam</option><option>Nữ</option></select></div>
+        <div class="field full"><label for="sfn">Họ và tên</label><input id="sfn" placeholder="VD: Nguyễn Văn An" maxlength="80"></div>
+        <div class="msg full" id="sfmsg" role="alert"></div>
+        <button class="primary full" type="submit">Thêm vào danh sách</button>
+      </form>
+
+      <details class="card" style="margin-top:14px;padding:10px 14px">
+        <summary style="cursor:pointer;font-weight:700">📋 Dán danh sách từ Excel</summary>
+        <div style="margin-top:10px;font-size:.86rem;line-height:1.5">
+          <p style="margin:0 0 6px">Copy các cột trong Excel rồi dán vào ô dưới. Mỗi dòng một học sinh, ví dụ:</p>
+          <pre style="margin:0 0 8px;padding:8px;border-radius:8px;background:rgba(37,99,235,.07);font-size:.8rem;white-space:pre-wrap">8A1	Nguyễn Văn An	Nam
+8A1	Trần Thị Bình	Nữ</pre>
+          <p style="margin:0 0 8px">Nếu chỉ có cột họ tên, chọn lớp ở ô "Lớp mặc định". Dòng tiêu đề và cột STT tự được bỏ qua.</p>
+          <div class="row">
+            <div class="field"><label for="sic">Lớp mặc định</label><input id="sic" placeholder="VD: 8A1" list="cls-list"></div>
+            <div class="field" style="display:flex;align-items:flex-end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 10px;font-weight:600"><input type="checkbox" id="sirep" style="width:auto"> Thay danh sách cũ của các lớp này</label></div>
+          </div>
+          <textarea id="sit" rows="6" placeholder="Dán danh sách vào đây..."></textarea>
+          <div class="msg" id="simsg" role="alert" style="margin-top:6px"></div>
+          <button type="button" class="primary" id="siBtn" style="margin-top:6px">Nhập danh sách</button>
+        </div>
+      </details>
+
+      <div class="stu-tools">
+        <button type="button" class="ghost" id="sExp">⬇️ Tải về file Excel (.csv)</button>
+        <button type="button" class="ghost" id="sImpBtn">⬆️ Mở file .csv</button>
+        <input type="file" id="sImpFile" accept=".csv,.txt,text/csv,text/plain" hidden>
+        <button type="button" class="ghost" id="sSample">🔄 Nạp lại danh sách mẫu</button>
+        <button type="button" class="ghost danger" id="sClear">🗑️ Xóa toàn bộ</button>
+      </div>
+      <p class="hint" id="sStore"></p>
     </section>
   </main>
 
@@ -483,7 +554,7 @@ $('#vd').value=$('#vf').value=today();
 
 document.querySelectorAll('.atab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.atab').forEach(x=>x.setAttribute('aria-selected',x===b));
-  ['pMove','pViol','pRank'].forEach(id=>{$('#'+id).hidden=b.dataset.p!==id});if(b.dataset.p==='pRank')renderRank();
+  ['pMove','pViol','pRank','pStu'].forEach(id=>{$('#'+id).hidden=b.dataset.p!==id});if(b.dataset.p==='pRank')renderRank();if(b.dataset.p==='pStu')renderStu();
 });
 
 function renderMoves(){
@@ -498,7 +569,7 @@ function renderViol(){
   $('#violList').innerHTML=l.length?l.slice().reverse().map(v=>'<div class="item"><div><b>'+esc(v.name)+'</b> · '+esc(v.cls)+'<small>'+esc(v.type)+(v.note?' — '+esc(v.note):'')+'</small><small>Ghi bởi '+esc(v.by)+'</small></div><div style="text-align:right"><div class="pts">-'+v.pts+'</div><button class="del" data-id="'+v.id+'">Xóa</button></div></div>').join(''):'<div class="empty">Chưa ghi nhận vi phạm nào trong ngày này.</div>';
   $('#violList').querySelectorAll('.del').forEach(b=>b.onclick=()=>remove('violations',b.dataset.id));
 }
-function render(){renderMoves();renderViol();renderRank();updateClassList()}
+function render(){renderMoves();renderViol();renderRank();updateClassList();renderStu();updateStuHint()}
 
 $('#moveForm').onsubmit=async e=>{
   e.preventDefault();
@@ -515,7 +586,7 @@ $('#violForm').onsubmit=async e=>{
   const date=$('#vd').value,cls=$('#vcl').value.trim().toUpperCase(),name=$('#vn').value.trim(),m=$('#vmsg2');
   if(!date||!cls||!name){say(m,'Vui lòng nhập ngày, lớp và tên học sinh.');return}
   if(await put('violations',{id:Date.now(),date,cls,name,type:$('#vt').value,pts:Math.max(0,+$('#vp').value||0),note:$('#vnote').value.trim(),by:$('#who').textContent},m)){
-    $('#vn').value='';$('#vnote').value='';$('#vf').value=date;say(m,'Đã lưu vi phạm.',true);$('#vn').focus();
+    $('#vn').value='';$('#vnote').value='';$('#vf').value=date;say(m,'Đã lưu vi phạm.',true);updateStuHint();$('#vn').focus();
   }
 };
 
@@ -547,7 +618,7 @@ function weekRange(iso){
   return [ymd(new Date(y,m-1,d-dow)),ymd(new Date(y,m-1,d-dow+6))];
 }
 function updateClassList(){
-  const set=new Set([...data.violations,...data.bonuses].map(x=>x.cls).filter(Boolean));
+  const set=new Set([...data.violations,...data.bonuses,...students.list].map(x=>x.cls).filter(Boolean));
   $('#cls-list').innerHTML=[...set].sort().map(c=>'<option value="'+esc(c)+'">').join('');
 }
 function renderRank(){
@@ -582,6 +653,201 @@ $('#bonusForm').onsubmit=async e=>{
     $('#bnote').value='';$('#wd').value=date;say(m,'Đã lưu điểm cộng.',true);renderRank();
   }
 };
+
+// ===== DANH SÁCH HỌC SINH =====
+// Lưu trên máy này (localStorage). Muốn dùng ở máy khác: "Tải về file Excel" rồi "Mở file .csv" ở máy kia.
+const SK='qld_students';
+const CLS_RE=/^\d{1,2}[A-Za-z]\d{0,2}$/;
+const normName=t=>String(t||'').normalize('NFC').replace(/\s+/g,' ').trim();
+const titleName=t=>normName(t).toLowerCase().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+const keyName=t=>normName(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d');
+const lastWord=n=>{const a=normName(n).split(' ');return a[a.length-1]||''};
+const viSort=(a,b)=>lastWord(a.name).localeCompare(lastWord(b.name),'vi')||a.name.localeCompare(b.name,'vi');
+const clsSort=(a,b)=>a.localeCompare(b,'vi',{numeric:true});
+const sid=()=>'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+// Danh sách mẫu: 25 lớp × 42 = 1.050 học sinh, tên giả định (tạo cố định, lần nào cũng giống nhau)
+function sampleStudents(){
+  let seed=20261108;
+  const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const pick=a=>a[Math.floor(rnd()*a.length)];
+  const HO=['Nguyễn','Nguyễn','Nguyễn','Trần','Trần','Lê','Lê','Phạm','Hoàng','Huỳnh','Phan','Vũ','Võ','Đặng','Bùi','Đỗ','Hồ','Ngô','Dương','Lý','Đinh','Trương','Mai','Lâm'];
+  const DEM_NAM=['Văn','Minh','Đức','Quang','Gia','Hoàng','Anh','Thành','Hữu','Nhật','Tuấn','Bảo','Đăng','Khánh','Trung'];
+  const DEM_NU=['Thị','Ngọc','Thu','Bảo','Khánh','Minh','Phương','Thanh','Mai','Hà','Gia','Thảo','Kim','Diệu','Như'];
+  const TEN_NAM=['An','Bình','Cường','Dũng','Duy','Đạt','Hải','Hiếu','Hoàng','Huy','Khang','Khoa','Kiên','Long','Lộc','Minh','Nam','Nghĩa','Phát','Phúc','Quân','Sơn','Tài','Thắng','Thịnh','Trí','Trung','Tuấn','Việt','Vinh','Bảo','Khôi','Nhân','Đức','Tùng'];
+  const TEN_NU=['Anh','Chi','Diệp','Giang','Hà','Hân','Hằng','Hương','Lan','Linh','Ly','Mai','My','Ngân','Ngọc','Nhi','Oanh','Phương','Quỳnh','Tâm','Thảo','Thư','Trang','Uyên','Vy','Yến','Hạnh','Hoa','Trâm','Xuân','Như','Châu'];
+  const classes=[];
+  [[6,6],[7,6],[8,7],[9,6]].forEach(([k,n])=>{for(let i=1;i<=n;i++)classes.push(k+'A'+i)});
+  const out=[];
+  classes.forEach(c=>{
+    const seen=new Set();
+    while(seen.size<42){
+      const nu=rnd()<.5,dem=nu?pick(DEM_NU):pick(DEM_NAM),ten=nu?pick(TEN_NU):pick(TEN_NAM),name=pick(HO)+' '+dem+' '+ten;
+      if(dem===ten||seen.has(name))continue;
+      seen.add(name);out.push({id:'m'+c+'-'+seen.size,cls:c,name,gender:nu?'Nữ':'Nam'});
+    }
+  });
+  return out;
+}
+
+let students=(()=>{
+  try{const s=JSON.parse(localStorage.getItem(SK));if(s&&Array.isArray(s.list))return s}catch(e){}
+  return {sample:true,list:sampleStudents()};
+})();
+function saveStudents(){
+  try{localStorage.setItem(SK,JSON.stringify(students));return true}
+  catch(e){$('#sStore').textContent='⚠️ Không lưu được trên máy này (trình duyệt chặn lưu trữ hoặc đầy bộ nhớ).';return false}
+}
+const classesOf=()=>[...new Set(students.list.map(s=>s.cls))].sort(clsSort);
+const inClass=c=>students.list.filter(s=>s.cls===c).sort(viSort);
+function weekViolCount(){
+  const [from,to]=weekRange(today()),m={};
+  data.violations.forEach(v=>{if(v.date>=from&&v.date<=to){const k=v.cls+'|'+keyName(v.name);m[k]=(m[k]||0)+1}});
+  return m;
+}
+
+function renderStu(){
+  if(!$('#stuTable'))return;
+  const cls=classesOf(),cur=$('#sc').value;
+  // Ô chọn lớp, nhóm theo khối
+  const groups={};cls.forEach(c=>{const k=c.match(/^\d+/)[0];(groups[k]=groups[k]||[]).push(c)});
+  const count=c=>students.list.filter(s=>s.cls===c).length;
+  $('#sc').innerHTML=cls.length?Object.keys(groups).sort((a,b)=>a-b).map(k=>'<optgroup label="Khối '+esc(k)+'">'+groups[k].map(c=>'<option value="'+esc(c)+'">'+esc(c)+' ('+count(c)+' HS)</option>').join('')+'</optgroup>').join(''):'<option value="">Chưa có lớp</option>';
+  $('#sc').value=cls.includes(cur)?cur:(cls[0]||'');
+  const nam=students.list.filter(s=>s.gender==='Nam').length,nu=students.list.filter(s=>s.gender==='Nữ').length;
+  $('#ssum').innerHTML='<b>'+cls.length+'</b> lớp · <b>'+students.list.length.toLocaleString('vi-VN')+'</b> học sinh ('+nam+' nam, '+nu+' nữ)'+(students.sample?'<span class="badge-sample">Danh sách mẫu · tên giả định</span>':'');
+  $('#sStore').textContent='Danh sách lưu trên máy này. Muốn dùng ở máy khác: bấm "Tải về file Excel" rồi mở file đó ở máy kia bằng "Mở file .csv".';
+
+  const q=keyName($('#sq').value),vc=weekViolCount();
+  let rows,search=!!q;
+  if(search)rows=students.list.filter(s=>keyName(s.name).includes(q)).sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b));
+  else rows=inClass($('#sc').value);
+  const shown=rows.slice(0,300);
+  if(!rows.length){
+    $('#stuTable').innerHTML='<div class="empty">'+(search?'Không tìm thấy học sinh nào có tên này.':'Chưa có học sinh nào. Thêm học sinh hoặc dán danh sách từ Excel ở bên dưới.')+'</div>';
+    return;
+  }
+  $('#stuTable').innerHTML=(search?'<p class="hint" style="margin:0 0 6px">Tìm thấy '+rows.length+' học sinh'+(rows.length>shown.length?', hiện '+shown.length+' em đầu':'')+'.</p>':'')+
+    '<table class="rk stu"><thead><tr><th>STT</th>'+(search?'<th>Lớp</th>':'')+'<th style="text-align:left">Họ và tên</th><th class="g">Giới tính</th><th class="vc">Lỗi tuần</th><th></th></tr></thead><tbody>'+
+    shown.map((s,i)=>{const n=vc[s.cls+'|'+keyName(s.name)]||0;
+      return '<tr><td>'+(i+1)+'</td>'+(search?'<td class="cl">'+esc(s.cls)+'</td>':'')+'<td class="nm">'+esc(s.name)+'</td><td class="g">'+esc(s.gender||'')+'</td><td class="'+(n?'v1':'v0')+'">'+n+'</td><td class="act"><button class="go" data-id="'+esc(s.id)+'" title="Ghi lỗi cho học sinh này">📝<span class="t"> Ghi lỗi</span></button><button class="del" data-id="'+esc(s.id)+'" title="Xóa khỏi danh sách"><span class="t">Xóa</span><span class="i">🗑️</span></button></td></tr>'}).join('')+
+    '</tbody></table>';
+  $('#stuTable').querySelectorAll('.go').forEach(b=>b.onclick=()=>{
+    const s=students.list.find(x=>x.id===b.dataset.id);if(!s)return;
+    document.querySelector('.atab[data-p="pViol"]').click();
+    $('#vcl').value=s.cls;$('#vn').value=s.name;updateStuHint();
+    say($('#vmsg2'),'Đã điền '+s.name+' ('+s.cls+'). Chọn lỗi rồi bấm "Lưu vi phạm".',true);
+    $('#vt').focus();
+  });
+  $('#stuTable').querySelectorAll('.del').forEach(b=>b.onclick=()=>{
+    const s=students.list.find(x=>x.id===b.dataset.id);if(!s)return;
+    if(!confirm('Xóa '+s.name+' ('+s.cls+') khỏi danh sách?'))return;
+    students.list=students.list.filter(x=>x.id!==s.id);saveStudents();updateClassList();renderStu();
+  });
+}
+$('#sc').onchange=()=>{$('#sq').value='';renderStu()};
+$('#sq').oninput=renderStu;
+
+// Gợi ý tên học sinh khi ghi vi phạm
+function updateStuHint(){
+  const c=$('#vcl').value.trim().toUpperCase(),list=c?inClass(c):[];
+  const pool=list.length?list:(c?[]:students.list);
+  $('#stu-list').innerHTML=pool.slice(0,600).map(s=>'<option value="'+esc(s.name)+'">'+(list.length?'':esc(s.cls))+'</option>').join('');
+  $('#vnhint').textContent=!c?'Gõ tên để tìm, lớp sẽ tự điền.':list.length?'Lớp '+c+' có '+list.length+' học sinh, gõ vài chữ để chọn tên.':'Lớp '+c+' chưa có trong danh sách học sinh, vẫn nhập tên tự do được.';
+}
+$('#vcl').addEventListener('input',updateStuHint);
+$('#vn').addEventListener('change',()=>{
+  if($('#vcl').value.trim())return;
+  const k=keyName($('#vn').value),m=students.list.filter(s=>keyName(s.name)===k);
+  if(m.length===1){$('#vcl').value=m[0].cls;updateStuHint()}
+  else if(m.length>1)$('#vnhint').textContent='Có '+m.length+' học sinh trùng tên ('+m.map(s=>s.cls).join(', ')+'), hãy nhập lớp.';
+});
+
+// Thêm 1 học sinh
+$('#stuForm').onsubmit=e=>{
+  e.preventDefault();
+  const c=$('#sfc').value.trim().toUpperCase(),n=titleName($('#sfn').value),m=$('#sfmsg');
+  if(!CLS_RE.test(c)){say(m,'Nhập lớp đúng dạng, VD: 6A1, 8A3.');return}
+  if(n.split(' ').length<2){say(m,'Nhập đầy đủ họ và tên.');return}
+  if(students.list.some(s=>s.cls===c&&keyName(s.name)===keyName(n))){say(m,n+' đã có trong lớp '+c+'.');return}
+  students.list.push({id:sid(),cls:c,name:n,gender:$('#sfg').value});
+  if(!saveStudents())return;
+  $('#sfn').value='';say(m,'Đã thêm '+n+' vào lớp '+c+'.',true);
+  updateClassList();$('#sq').value='';renderStu();$('#sc').value=c;renderStu();$('#sfn').focus();
+};
+
+// Đọc danh sách dán từ Excel / file CSV
+function parseRoster(text,defCls){
+  const out=[],bad=[];
+  String(text||'').replace(/^﻿/,'').split(/\r?\n/).forEach((line,i)=>{
+    if(!line.trim())return;
+    let cells=line.split(line.includes('\t')?'\t':line.includes(';')?';':',').map(x=>normName(x.replace(/^"|"$/g,''))).filter(Boolean);
+    const low=keyName(cells.join(' '));
+    if(/ho (va )?ten|^stt\b|^lop\b/.test(low))return; // dòng tiêu đề
+    let cls='',gender='';
+    cells=cells.filter(x=>{
+      if(!cls&&CLS_RE.test(x)){cls=x.toUpperCase();return false}
+      if(!gender&&/^(nam|nữ|nu)$/i.test(x)){gender=/^nam$/i.test(x)?'Nam':'Nữ';return false}
+      if(/^\d+$/.test(x))return false; // cột STT
+      return true;
+    });
+    const name=titleName(cells.sort((a,b)=>b.length-a.length)[0]||'');
+    cls=cls||defCls;
+    if(!cls||name.split(' ').length<2){bad.push(i+1);return}
+    out.push({cls,name,gender});
+  });
+  return {out,bad};
+}
+function importRoster(text,defCls,replace,msgEl){
+  const {out,bad}=parseRoster(text,defCls);
+  if(!out.length){say(msgEl,'Không đọc được học sinh nào. '+(defCls?'':'Nếu chỉ có cột họ tên, hãy nhập "Lớp mặc định".'));return false}
+  if(students.sample){
+    if(!confirm('Đang dùng danh sách MẪU (tên giả định).\nXóa danh sách mẫu và dùng danh sách vừa nhập?\n\nBấm "Hủy" để giữ danh sách mẫu và thêm vào chung.')){students.sample=true}
+    else{students.list=[];students.sample=false}
+  }
+  const cls=new Set(out.map(s=>s.cls));
+  if(replace)students.list=students.list.filter(s=>!cls.has(s.cls));
+  const have=new Set(students.list.map(s=>s.cls+'|'+keyName(s.name)));
+  let add=0,dup=0;
+  out.forEach(s=>{const k=s.cls+'|'+keyName(s.name);if(have.has(k)){dup++;return}have.add(k);students.list.push({id:sid(),cls:s.cls,name:s.name,gender:s.gender});add++});
+  if(!saveStudents())return false;
+  updateClassList();$('#sq').value='';renderStu();
+  if(cls.size===1){$('#sc').value=[...cls][0];renderStu()}
+  say(msgEl,'Đã thêm '+add+' học sinh vào '+cls.size+' lớp'+(dup?', bỏ qua '+dup+' em đã có':'')+(bad.length?', '+bad.length+' dòng không đọc được (dòng '+bad.slice(0,8).join(', ')+(bad.length>8?'…':'')+')':'')+'.',true);
+  return true;
+}
+$('#siBtn').onclick=()=>{
+  const d=$('#sic').value.trim().toUpperCase();
+  if(d&&!CLS_RE.test(d)){say($('#simsg'),'Lớp mặc định chưa đúng dạng, VD: 8A1.');return}
+  if(importRoster($('#sit').value,d,$('#sirep').checked,$('#simsg')))$('#sit').value='';
+};
+
+// Xuất / mở file CSV (Excel mở được, giữ tiếng Việt)
+$('#sExp').onclick=()=>{
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const rows=students.list.slice().sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b));
+  const csv='﻿'+['Lớp,Họ và tên,Giới tính'].concat(rows.map(s=>[s.cls,s.name,s.gender||''].map(q).join(','))).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='danh-sach-hoc-sinh-'+today()+'.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+};
+$('#sImpBtn').onclick=()=>$('#sImpFile').click();
+$('#sImpFile').onchange=async()=>{
+  const f=$('#sImpFile').files[0];if(!f)return;
+  const text=await f.text();$('#sImpFile').value='';
+  importRoster(text,'',false,$('#sfmsg'));
+  $('#sfmsg').scrollIntoView({block:'center'});
+};
+$('#sSample').onclick=()=>{
+  if(!confirm('Thay toàn bộ danh sách hiện tại bằng danh sách MẪU (25 lớp, 1.050 học sinh tên giả định)?'))return;
+  students={sample:true,list:sampleStudents()};saveStudents();updateClassList();$('#sq').value='';renderStu();
+};
+$('#sClear').onclick=()=>{
+  if(!confirm('Xóa TOÀN BỘ '+students.list.length+' học sinh khỏi máy này? Không thể hoàn tác.\n(Nên bấm "Tải về file Excel" trước để giữ bản sao.)'))return;
+  students={sample:false,list:[]};saveStudents();updateClassList();$('#sq').value='';renderStu();
+};
+
 render();
 if(useApi){
   refresh();
@@ -598,7 +864,7 @@ if(useApi){
 const AI_URL = 'https://script.google.com/macros/s/AKfycbwvBK1qRpCo6CyhquP4f_n6ZyESM4BIuQzUg4I1E0JUXzKjhmFfep5uEjFAZ-lDl_cSkA/exec';
 const AI_SECRET = 'anh15032012';
 const AI_URL_OK = /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec(\?.*)?$/.test(AI_URL.trim());
-const AI_SUGGEST=['Cách tính điểm thi đua?','Lớp nào đứng nhất tuần này?','Đi trễ bị trừ mấy điểm?','Hôm nay có bao nhiêu vi phạm?','Phong trào đang diễn ra?','Làm sao tạo tài khoản?'];
+const AI_SUGGEST=['Sĩ số lớp 6A1?','Cách tính điểm thi đua?','Lớp nào đứng nhất tuần này?','Đi trễ bị trừ mấy điểm?','Hôm nay có bao nhiêu vi phạm?','Phong trào đang diễn ra?','Làm sao tạo tài khoản?'];
 let aiHist=[],aiBusy=false;
 
 const nrm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
@@ -640,6 +906,8 @@ function aiContext(){
     quyDinhBoSung:($('#rl-note').value||'').slice(0,1500),
     tuanNay:{tu:w.from,den:w.to,xepHang:w.rows.slice(0,40).map(r=>({hang:r.rank,lop:r.cls,soLoi:r.nv,diemCong:r.plus,diemTru:r.minus,tong:r.total}))},
     viPhamHomNayTheoLop:todayByClass(),
+    siSoTheoLop:Object.fromEntries(classesOf().map(c=>[c,students.list.filter(s=>s.cls===c).length])),
+    tongHocSinh:students.list.length,
     phongTrao:data.movements.slice(-15).map(m=>({ten:m.name,batDau:m.start,ketThuc:m.end,noiDung:String(m.desc||'').slice(0,200)}))
   };
 }
@@ -649,6 +917,16 @@ function localAnswer(raw){
   const q=nrm(raw);
   const typeKeys=[['di tre','tre gio','den tre'],['dong phuc'],['khan quang','huy hieu'],['trat tu','noi chuyen','on ao'],['dien thoai'],['rac'],['nghi hoc','vang hoc','tron hoc'],['vi pham khac']];
   const clsM=raw.toUpperCase().match(/\b\d{1,2}[A-Z]\d{0,2}\b/);
+  if(hasW(q,'si so','bao nhieu hoc sinh','may hoc sinh','bao nhieu em','danh sach hoc sinh','bao nhieu hs')){
+    if(clsM){const n=students.list.filter(s=>s.cls===clsM[0]).length;
+      return n?'Lớp **'+clsM[0]+'** có **'+n+' học sinh** ('+students.list.filter(s=>s.cls===clsM[0]&&s.gender==='Nữ').length+' nữ). Xem danh sách ở tab **👥 Học sinh**.':'Lớp **'+clsM[0]+'** chưa có trong danh sách học sinh. Thêm ở tab **👥 Học sinh**.'}
+    const cl=classesOf();
+    return 'Toàn trường có **'+students.list.length.toLocaleString('vi-VN')+' học sinh** ở **'+cl.length+' lớp**'+(students.sample?' (đang là danh sách mẫu)':'')+'.\n'+cl.slice(0,30).map(c=>'• '+c+': '+students.list.filter(s=>s.cls===c).length).join('\n');
+  }
+  if(hasW(q,'lop nao','hoc lop','o lop')){
+    const hit=students.list.filter(s=>keyName(s.name).length>5&&q.includes(keyName(s.name)));
+    if(hit.length)return hit.slice(0,5).map(s=>'**'+s.name+'** học lớp **'+s.cls+'**').join('\n');
+  }
   if(clsM){
     const c=clsM[0],w=weekStats(),r=w.rows.find(x=>x.cls===c);
     if(!r)return 'Tuần này ('+vdate(w.from)+' → '+vdate(w.to)+') lớp **'+c+'** chưa có điểm cộng hay vi phạm nào, nên đang giữ nguyên điểm gốc **'+BASE_SCORE+'**.';
