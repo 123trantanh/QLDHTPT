@@ -19,6 +19,10 @@ body{margin:0;min-height:100vh;font-family:"Be Vietnam Pro","Segoe UI",Roboto,Ar
 .wrap{max-width:1000px;margin:0 auto;padding:18px 14px 40px}
 header{text-align:center;margin-bottom:14px}
 header h1{margin:0;font-size:clamp(1.5rem,4vw,2.2rem);color:#fff;text-shadow:0 2px 8px rgba(0,40,120,.7)}
+/* Tiêu đề: 1 hàng trên máy tính (điện thoại tự xuống dòng), chữ đỏ */
+header h1{white-space:nowrap;font-size:min(1.85rem,2.6vw)}
+header h1{color:#ee373d;text-shadow:0 2px 6px rgba(0,0,0,.3)}
+@media (max-width:720px){header h1{white-space:normal;font-size:1.35rem}}
 header p{margin:2px 0 0;color:#fff;font-size:.95rem;text-shadow:0 1px 6px rgba(0,40,120,.8)}
 
 .demo{background:var(--navy);border-radius:16px;border:2px dashed #fcd34d;overflow:hidden;color:#fff;
