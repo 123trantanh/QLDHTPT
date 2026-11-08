@@ -481,7 +481,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
 const API_URL = 'https://script.google.com/macros/s/AKfycbx0j5acN9z9geTtkFZxuSJIjv2MKbp8KjXTkTrsT6l8Hdryd3UFK4SOAel7o8TIBP9n3Q/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
-const POLL_MS = 10000;                    // tự tải lại dữ liệu mỗi 10 giây
+const POLL_MS = 5000;                    // tự tải lại dữ liệu mỗi 10 giây
 
 const DK='qld_data';
 const useApi=!!API_URL;
