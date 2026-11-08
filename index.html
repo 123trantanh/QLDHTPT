@@ -156,7 +156,10 @@ body.in .app{display:block;padding-left:244px;min-height:100vh;max-width:none;ma
 .top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;text-align:left;margin:0;padding:12px 26px;min-height:66px;
   background:var(--card);border-bottom:1px solid var(--line2)}
 .top-user{flex:1;min-width:0;line-height:1.3}
-.top-user b{display:block;font-size:1rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-user b{display:flex;align-items:center;min-width:0;font-size:1rem;color:var(--ink)}
+.top-user b[hidden]{display:none}
+.top-user .wl{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-user .pen-btn{flex:none}
 .top-user small{display:block;font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-right{display:flex;align-items:center;gap:10px}
 .chip-date{font-size:.8rem;font-weight:600;color:#5b21b6;background:var(--lav);padding:7px 12px;border-radius:99px;white-space:nowrap}
@@ -214,6 +217,17 @@ body.in .app{display:block;padding-left:244px;min-height:100vh;max-width:none;ma
 .ib:hover:not(:disabled){border-color:currentColor}
 .ib:disabled{opacity:.4;cursor:not-allowed}
 .rk.stu .act .ed{color:#6d28d9}
+.role .holder{display:block;font-style:normal;font-size:.75rem;font-weight:700;color:#fde68a;margin-top:2px}
+.role .holder:empty{display:none}
+.pen-btn{border:0;background:none;cursor:pointer;font-size:.9em;padding:2px 6px;margin-left:4px;border-radius:8px;opacity:.35;vertical-align:middle;transition:opacity .15s,background .15s}
+.pen-btn:hover,.pen-btn:focus-visible{opacity:1;background:rgba(37,99,235,.1)}
+.pen-btn.light:hover,.pen-btn.light:focus-visible{background:rgba(255,255,255,.2)}
+.who-form{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.who-form .wf-lb{font-weight:700;white-space:nowrap}
+.who-form input{width:auto;flex:1;min-width:0;max-width:260px;padding:7px 10px;font-weight:600}
+.who-form .ib{margin:0;white-space:nowrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.perm td small{display:block;color:#6d28d9;font-weight:600;font-size:.76rem}
 .t-x{background:rgba(100,116,139,.14);color:#475569}
 .tb td small.sm-only{display:none}
 .grid-side{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(300px,1fr);gap:0 16px;align-items:start}
@@ -297,6 +311,8 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
 }
 @media (max-width:560px){
   .chip-date{display:none}
+  .who-form .wf-lb{display:none}
+  .top:has(.who-form:not([hidden])) .top-right{display:none}
   .top-right .ghost{padding:7px 10px;font-size:.8rem}
   .ph h1{font-size:1.22rem}
   .hello{padding:18px}.hello b{font-size:1.15rem}.hello-ic{font-size:2.2rem}
@@ -376,14 +392,15 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
     <div class="main">
       <header class="top">
         <button class="hamb" id="hamb" aria-label="Mở menu" aria-controls="side" aria-expanded="false">☰</button>
-        <div class="top-user"><b>Xin chào, <span id="who"></span></b><small><span id="topRole"></span> · <span id="sync">đang kết nối…</span></small></div>
+        <div class="top-user"><b id="whoLine"><span class="wl">Xin chào, <span id="who"></span></span><button type="button" class="pen-btn" id="whoEdit" title="Sửa tên hiển thị" aria-label="Sửa tên hiển thị">✏️</button></b>
+          <form class="who-form" id="whoForm" hidden><label for="whoIn" class="sr">Tên hiển thị</label><span class="wf-lb">Xin chào,</span><input id="whoIn" maxlength="80" placeholder="VD: Nguyễn Văn A" autocomplete="name"><button class="ib edit" type="submit">💾 Lưu</button><button class="ib" type="button" id="whoCancel">Hủy</button></form><small><span id="topRole"></span> · <span id="sync">đang kết nối…</span></small></div>
         <div class="top-right"><span class="chip-date" id="topDate"></span><button class="ghost" id="logout">Đăng xuất</button></div>
       </header>
 
       <div class="content">
         <!-- ===== TỔNG QUAN ===== -->
         <section id="pHome" class="page" aria-labelledby="h-home">
-          <div class="hello"><div><b id="h-home">Xin chào, <span id="helloName"></span>! 👋</b><small id="helloDate"></small></div><span class="hello-ic">⚜️</span></div>
+          <div class="hello"><div><b id="h-home">Xin chào, <span id="helloName"></span>! 👋 <button type="button" class="pen-btn light" data-who-edit title="Sửa tên hiển thị" aria-label="Sửa tên hiển thị">✏️</button></b><small id="helloDate"></small></div><span class="hello-ic">⚜️</span></div>
           <div class="home-grid">
             <div class="home-main">
               <div class="card">
@@ -635,22 +652,22 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
           <div>
             <h3>QUẢN LÝ</h3>
             <div class="grid1">
-              <button class="role" data-role="Tổng phụ trách"><span class="ic">👔</span><span><b>Tổng phụ trách</b><small>Toàn trường</small></span></button>
-              <button class="role" data-role="Liên đội trưởng"><span class="ic">🎖️</span><span><b>Liên đội trưởng</b><small>Ban chỉ huy Liên đội</small></span></button>
-              <button class="role" data-role="Liên đội phó"><span class="ic">🏅</span><span><b>Liên đội phó</b><small>Ban chỉ huy Liên đội</small></span></button>
-              <button class="role" data-role="Ủy viên BCH"><span class="ic">📋</span><span><b>Ủy viên BCH</b><small>Ban chỉ huy Liên đội</small></span></button>
-              <button class="role" data-role="Ủy viên ban chỉ huy chi đội"><span class="ic">🏫</span><span><b>Ủy viên ban chỉ huy chi đội</b><small></small></span></button>
-              <button class="role" data-role="Phụ trách chi đội"><span class="ic">📁</span><span><b>Phụ trách chi đội</b><small></small></span></button>
+              <button class="role" data-role="Tổng phụ trách"><span class="ic">👔</span><span><b>Tổng phụ trách</b><small>Toàn trường</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Liên đội trưởng"><span class="ic">🎖️</span><span><b>Liên đội trưởng</b><small>Ban chỉ huy Liên đội</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Liên đội phó"><span class="ic">🏅</span><span><b>Liên đội phó</b><small>Ban chỉ huy Liên đội</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Ủy viên BCH"><span class="ic">📋</span><span><b>Ủy viên BCH</b><small>Ban chỉ huy Liên đội</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Ủy viên ban chỉ huy chi đội"><span class="ic">🏫</span><span><b>Ủy viên ban chỉ huy chi đội</b><small></small><em class="holder"></em></span></button>
+              <button class="role" data-role="Phụ trách chi đội"><span class="ic">📁</span><span><b>Phụ trách chi đội</b><small></small><em class="holder"></em></span></button>
             </div>
           </div>
           <div>
             <h3>HỌC SINH</h3>
             <div class="grid1">
-              <button class="role" data-role="Học sinh"><span class="ic">🎓</span><span><b>Học sinh</b><small>Đội viên</small></span></button>
-              <button class="role" data-role="Chi đội trưởng"><span class="ic">👑</span><span><b>Chi đội trưởng</b><small>Lớp trưởng</small></span></button>
-              <button class="role" data-role="Chi đội phó"><span class="ic">🎗️</span><span><b>Chi đội phó</b><small>Cán sự lớp</small></span></button>
-              <button class="role" data-role="Cờ đỏ lớp"><span class="ic">🚩</span><span><b>Cờ đỏ lớp</b><small>Chấm thi đua</small></span></button>
-              <button class="role" data-role="Cờ đỏ trực cổng"><span class="ic">🚪</span><span><b>Cờ đỏ trực cổng</b><small>Ghi vi phạm nề nếp và đi trễ ở cổng trường</small></span></button>
+              <button class="role" data-role="Học sinh"><span class="ic">🎓</span><span><b>Học sinh</b><small>Đội viên</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Chi đội trưởng"><span class="ic">👑</span><span><b>Chi đội trưởng</b><small>Lớp trưởng</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Chi đội phó"><span class="ic">🎗️</span><span><b>Chi đội phó</b><small>Cán sự lớp</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Cờ đỏ lớp"><span class="ic">🚩</span><span><b>Cờ đỏ lớp</b><small>Chấm thi đua</small><em class="holder"></em></span></button>
+              <button class="role" data-role="Cờ đỏ trực cổng"><span class="ic">🚪</span><span><b>Cờ đỏ trực cổng</b><small>Ghi vi phạm nề nếp và đi trễ ở cổng trường</small><em class="holder"></em></span></button>
             </div>
           </div>
         </div>
@@ -716,9 +733,11 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
 <script>
 const $=s=>document.querySelector(s);
 // role: vai trò khi vào bằng bản demo; null = tài khoản trường / quản trị viên (sửa được tất cả, như cũ)
-const enter=(name,role=null)=>{curRole=role;$('#who').textContent=name;fillUser();document.body.classList.add('in');applyPerms();render();go(pageFromHash()||'pHome',true);window.scrollTo(0,0)};
+// name: tên mặc định; role: vai trò bản demo (null = tài khoản trường / quản trị viên, sửa được tất cả); acct: tên đăng nhập
+let curAcct=null,defaultName='';
+const enter=(name,role=null,acct=null)=>{curRole=role;curAcct=acct;defaultName=name;whoEdit(false);$('#who').textContent=holderOf(nameKey())||name;fillUser();document.body.classList.add('in');applyPerms();render();go(pageFromHash()||'pHome',true);window.scrollTo(0,0)};
 document.querySelectorAll('.role').forEach(b=>b.onclick=()=>enter(b.dataset.role,b.dataset.role));
-$('#logout').onclick=()=>{curRole=null;exitAllEdits();sideOpen(false);document.body.classList.remove('in');$('#u').value='';$('#p').value='';
+$('#logout').onclick=()=>{curRole=null;curAcct=null;whoEdit(false);exitAllEdits();sideOpen(false);document.body.classList.remove('in');$('#u').value='';$('#p').value='';
   try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}document.title='Quản lý Đội'};
 
 // ===== PHÂN QUYỀN =====
@@ -796,15 +815,15 @@ $('#loginForm').onsubmit=async e=>{
   e.preventDefault();
   const u=$('#u').value.trim().toLowerCase(),p=$('#p').value,m=$('#msg');
   if(!u||!p){say(m,'Vui lòng nhập tên đăng nhập và mật khẩu.');return}
-  if(u==='admin'&&p==='123456'){say(m,'');enter('Quản trị viên');return}
+  if(u==='admin'&&p==='123456'){say(m,'');enter('Quản trị viên',null,'admin');return}
   if(useApi){
     say(m,'Đang đăng nhập...',true);
-    try{await apiPost({action:'login',username:u,password:p});say(m,'');enter(u)}
+    try{await apiPost({action:'login',username:u,password:p});say(m,'');enter(u,null,u)}
     catch(err){say(m,err.message)}
     return;
   }
   const a=getAcc()[u];
-  if(a&&a.hash===await sha(u+':'+p)){say(m,'');enter(u)}
+  if(a&&a.hash===await sha(u+':'+p)){say(m,'');enter(u,null,u)}
   else say(m,'Sai tên đăng nhập hoặc mật khẩu.');
 };
 
@@ -863,9 +882,9 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbw0gvQME1QZv13Tne_fPmXpffIl08LpjYnTLaExuY8PxBGgEkp97eYQucCOGhtGq8IHgQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbyntWNexjvxqh8z81e6XQxxCdhkmCYQKGjjrR4dhtTUzI0CMYaTulLpWP7fmBLfDCgLfQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
-const POLL_MS = 1000;                    // tự tải lại dữ liệu mỗi 1 giây
+const POLL_MS = 1000;                    // tự tải lại dữ liệu mỗi 10 giây
 
 const DK='qld_data';
 const useApi=!!API_URL;
@@ -908,6 +927,7 @@ async function refresh(){
     data.violations=(j.violations||[]).sort((a,b)=>a.id-b.id);
     data.bonuses=(j.bonuses||[]).sort((a,b)=>a.id-b.id);
     if(Array.isArray(j.students)){data.students=j.students.map(normStu);stuLoaded=true}
+    if(j.roles&&typeof j.roles==='object'&&!Array.isArray(j.roles)){roleHolders=j.roles;saveRoleCache();paintHolders();syncWho()}
     if(typeof j.rules==='string'&&document.activeElement!==$('#rl-note')&&!rlDirty)$('#rl-note').value=j.rules;
     render();
     setSync('đã đồng bộ Google Sheets lúc '+nowStr(),true);
@@ -1531,7 +1551,7 @@ const dnum=iso=>{const [y,m,d]=String(iso).split('-').map(Number);return new Dat
 const longDate=iso=>WD[dnum(iso).getDay()]+', '+vdate(iso);
 const addDays=(iso,n)=>{const d=dnum(iso);d.setDate(d.getDate()+n);return ymd(d)};
 const initial=n=>{const w=String(n||'').trim().split(/\s+/);return (w[w.length-1]||'?').charAt(0).toUpperCase()};
-function roleLabel(){return curRole||(who()==='Quản trị viên'?'Quản trị viên':'Tài khoản trường')}
+function roleLabel(){return curRole||(curAcct==='admin'?'Quản trị viên':'Tài khoản trường')}
 function fillUser(){
   const n=who(),r=roleLabel();
   $('#sideName').textContent=n;$('#sideRole').textContent=r;$('#topRole').textContent=r;$('#helloName').textContent=n;
@@ -1648,7 +1668,7 @@ function renderAdmin(){
   const ns=students.list.filter(isSample).length;
   $('#admData').innerHTML='<dl class="kv"><dt>Nơi lưu</dt><dd>'+(useApi?'☁️ Google Sheets (mọi máy dùng chung)':'💻 Chỉ trên máy này')+'</dd><dt>Trạng thái</dt><dd>'+esc($('#sync').textContent)+'</dd><dt>Tự đồng bộ</dt><dd>'+(useApi?'mỗi '+POLL_MS/1000+' giây':'không')+'</dd><dt>Trợ lý AI</dt><dd>'+(AI_URL_OK?'🤖 ChatGPT (đã nối)':'⚡ Trả lời nhanh theo dữ liệu app')+'</dd><dt>Học sinh mẫu</dt><dd>'+(ns?ns.toLocaleString('vi-VN')+' em (tên giả định)':'không có')+'</dd></dl>';
   const keys=Object.keys(ROLE_PERMS),cut=keys.indexOf('Học sinh');
-  const row=k=>'<tr'+(k===curRole?' class="me"':'')+'><td><b>'+esc(k)+'</b>'+(k===curRole?' <span class="pill t-p">bạn</span>':'')+'</td>'+TAB_ORDER.map(t=>'<td>'+(ROLE_PERMS[k].includes(t)?'✏️':'👁️')+'</td>').join('')+'</tr>';
+  const row=k=>'<tr'+(k===curRole?' class="me"':'')+'><td><b>'+esc(k)+'</b>'+(k===curRole?' <span class="pill t-p">bạn</span>':'')+(holderOf(k)?'<small>👤 '+esc(holderOf(k))+'</small>':'')+'</td>'+TAB_ORDER.map(t=>'<td>'+(ROLE_PERMS[k].includes(t)?'✏️':'👁️')+'</td>').join('')+'</tr>';
   const grp=t=>'<tr class="grp"><td colspan="'+(TAB_ORDER.length+1)+'">'+t+'</td></tr>';
   $('#admPerm').innerHTML='<table class="tb perm"><thead><tr><th>Vai trò</th>'+TAB_ORDER.map(t=>'<th>'+TAB_NAME[t]+'</th>').join('')+'</tr></thead><tbody>'+
     grp('QUẢN LÝ')+keys.slice(0,cut).map(row).join('')+grp('HỌC SINH')+keys.slice(cut).map(row).join('')+grp('TÀI KHOẢN ĐĂNG NHẬP')+
@@ -1681,6 +1701,58 @@ $('#expRank').onclick=()=>{const w=weekStats($('#wd').value||today());
 $('#expMove').onclick=()=>dlXlsx([['Tên phong trào','Bắt đầu','Kết thúc','Trạng thái','Nội dung','Người tạo']].concat(
   data.movements.slice().sort((a,b)=>a.start.localeCompare(b.start)).map(m=>[m.name,vdate(m.start),vdate(m.end),ST_TXT[moveStatus(m)][0],m.desc||'',m.by||''])),
   [30,12,12,14,46,18],'Phong trào','phong-trao-'+today()+'.xlsx');
+
+// =====================================================================
+// ===== TÊN NGƯỜI ĐẢM NHẬN CHỨC VỤ (lời chào "Xin chào, ..." + cây viết sửa) =====
+// Lưu ở Google Sheets (trang tính CaiDat, ô B2) nên mọi máy đều thấy; chưa nối Sheets thì lưu trên máy này.
+// =====================================================================
+const RK='qld_roles';
+let roleHolders=(()=>{try{const o=JSON.parse(localStorage.getItem(RK));return o&&typeof o==='object'?o:{}}catch(e){return {}}})();
+let whoEditing=false;
+const holderOf=k=>String((k&&roleHolders[k])||'').trim();
+// Khóa lưu tên: vai trò bản demo, hoặc "Tài khoản: tên đăng nhập"
+const nameKey=()=>curRole||(curAcct?'Tài khoản: '+curAcct:'');
+function saveRoleCache(){try{localStorage.setItem(RK,JSON.stringify(roleHolders))}catch(e){}}
+function paintHolders(){
+  document.querySelectorAll('.role').forEach(b=>{const h=b.querySelector('.holder'),n=holderOf(b.dataset.role);if(h)h.textContent=n?'👤 '+n:''});
+}
+function syncWho(){ // tên trên máy chủ đổi (máy khác vừa sửa) → cập nhật lời chào
+  if(!document.body.classList.contains('in')||whoEditing)return;
+  const n=holderOf(nameKey())||defaultName;
+  if(n&&n!==who()){$('#who').textContent=n;fillUser();renderHome()}
+}
+function whoEdit(on){
+  whoEditing=on;
+  $('#whoLine').hidden=on;$('#whoForm').hidden=!on;
+  if(on){const i=$('#whoIn');i.value=holderOf(nameKey())||'';setTimeout(()=>{i.focus();i.select()},30)}
+}
+$('#whoEdit').onclick=()=>whoEdit(true);
+document.addEventListener('click',e=>{if(e.target.closest('[data-who-edit]')){window.scrollTo(0,0);whoEdit(true)}});
+$('#whoCancel').onclick=()=>whoEdit(false);
+$('#whoIn').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();whoEdit(false);$('#whoEdit').focus()}});
+$('#whoForm').onsubmit=async e=>{
+  e.preventDefault();
+  const key=nameKey(),name=normName($('#whoIn').value).slice(0,80);
+  if(!key)return;
+  if(name===holderOf(key)){whoEdit(false);return}
+  const old=roleHolders[key],btns=$('#whoForm').querySelectorAll('button,input');
+  if(name)roleHolders[key]=name;else delete roleHolders[key];
+  if(useApi){
+    btns.forEach(b=>b.disabled=true);busy++;
+    try{const r=await apiPost({action:'setRole',role:key,name});if(r.roles&&typeof r.roles==='object')roleHolders=r.roles}
+    catch(err){
+      if(old)roleHolders[key]=old;else delete roleHolders[key];
+      toast('Không lưu được tên lên Google Sheets: '+(/không hợp lệ/.test(err.message)?'Code.gs chưa được cập nhật bản mới. Dán Code.gs mới vào Apps Script rồi triển khai phiên bản mới.':err.message),false);
+      return;
+    }finally{busy--;btns.forEach(b=>b.disabled=false)}
+  }
+  saveRoleCache();paintHolders();
+  whoEdit(false);
+  $('#who').textContent=name||defaultName;fillUser();renderHome();renderAdmin();
+  toast(name?'Đã đổi tên: Xin chào, '+name+'!':'Đã xóa tên, lời chào trở về "'+defaultName+'".',true);
+  $('#whoEdit').focus();
+};
+paintHolders();
 
 render();
 if(useApi){
@@ -1742,6 +1814,7 @@ function aiContext(){
     viPhamHomNayTheoLop:todayByClass(),
     siSoTheoLop:Object.fromEntries(classesOf().map(c=>[c,students.list.filter(s=>s.cls===c).length])),
     tongHocSinh:students.list.length,
+    nguoiDamNhanChucVu:Object.fromEntries(Object.keys(ROLE_PERMS).filter(holderOf).map(k=>[k,holderOf(k)])),
     phongTrao:data.movements.slice(-15).map(m=>({ten:m.name,batDau:m.start,ketThuc:m.end,noiDung:String(m.desc||'').slice(0,200)}))
   };
 }
