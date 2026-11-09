@@ -334,6 +334,29 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
   .appb{padding:8px 2px;font-size:.72rem}.appb i{width:44px;height:44px}
 }
 
+/* ===== Câu lạc bộ ===== */
+.nav .nb.nb-soft{background:rgba(255,255,255,.22)}
+.nav.on .nb.nb-soft{background:#ede9fe;color:#5b21b6}
+.cl-warn{background:#fff7e6;border:1px solid #f5c26b;color:#8a5300;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:.88rem}
+.clubs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.club{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line2);border-radius:14px;padding:14px;background:var(--card);min-width:0;transition:border-color .15s,box-shadow .15s}
+.club:hover{border-color:#c4b5fd}
+.club.sel{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+.club-h{display:flex;gap:10px;align-items:flex-start}
+.club-h i{font-style:normal;flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:1.25rem}
+.club-h b{display:block;font-size:.98rem;color:var(--ink);overflow-wrap:anywhere}
+.club-meta{font-size:.82rem;color:var(--muted);display:grid;gap:3px}
+.club-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.club-desc{font-size:.82rem;color:var(--ink);opacity:.85;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.club-f{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:4px;flex-wrap:wrap}
+.club-f .ib{margin:0}
+.club-f .mem{flex:1;text-align:left;color:#6d28d9}
+.mem-form{border:1px solid var(--line2);border-radius:14px;padding:14px;background:var(--soft)}
+.mem-form.editing{border:2px solid #8b5cf6}
+.mem-info{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted);margin:-2px 0 12px}
+.mem-info b{color:var(--ink)}
+@media (max-width:560px){.clubs{grid-template-columns:minmax(0,1fr)}}
+
 /* ===== Trợ lý AI ===== */
 .ai-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;width:58px;height:58px;border-radius:50%;border:0;
   background:var(--blue);color:#fff;font-size:1.7rem;cursor:pointer;box-shadow:0 8px 22px rgba(30,64,175,.45)}
@@ -387,6 +410,7 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
         <button class="nav" data-p="pRank"><span class="ni">🏆</span><span class="nt">Thi đua</span></button>
         <button class="nav" data-p="pMove"><span class="ni">🚩</span><span class="nt">Phong trào</span><em class="nb" id="nbMove" hidden></em></button>
         <button class="nav" data-p="pStu"><span class="ni">👥</span><span class="nt">Học sinh</span></button>
+        <button class="nav" data-p="pClub"><span class="ni">🎯</span><span class="nt">Câu lạc bộ</span><em class="nb nb-soft" id="nbClub" hidden></em></button>
         <button class="nav" data-p="pAdmin"><span class="ni">⚙️</span><span class="nt">Quản lý</span></button>
       </nav>
       <div class="side-user"><span class="av" id="sideAv">?</span><div><b id="sideName"></b><small id="sideRole"></small></div></div>
@@ -600,6 +624,62 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
           </div>
         </section>
 
+        <!-- ===== CÂU LẠC BỘ ===== -->
+        <section id="pClub" class="panel page" hidden>
+          <div class="ph"><div><h1>🎯 Câu lạc bộ</h1><p>Quản lý các câu lạc bộ của Liên đội và học sinh tham gia.</p></div></div>
+          <div class="ro-note" role="status" hidden></div>
+          <div class="cl-warn" id="clubWarn" hidden></div>
+          <div class="stats" id="clubStats"></div>
+          <div class="grid-2">
+            <div class="card" id="clubFormCard">
+              <div class="ch"><h2 id="clubFormTitle">➕ Thêm câu lạc bộ</h2><button type="button" class="ghost sm" id="clubCancel" hidden>Hủy sửa</button></div>
+              <form id="clubForm" class="row">
+                <div class="field full"><label for="cn">Tên câu lạc bộ</label><input id="cn" placeholder="VD: CLB Tiếng Anh" maxlength="80"></div>
+                <div class="field"><label for="cf">Lĩnh vực</label><select id="cf"></select></div>
+                <div class="field"><label for="cl">Người phụ trách</label><input id="cl" placeholder="VD: Cô Nguyễn Thị Lan" maxlength="80"></div>
+                <div class="field"><label for="cs">Lịch sinh hoạt</label><input id="cs" placeholder="VD: Thứ Bảy, 14h–16h" maxlength="120"></div>
+                <div class="field"><label for="cp">Địa điểm</label><input id="cp" placeholder="VD: Phòng Đội" maxlength="80"></div>
+                <div class="field full"><label for="cd">Giới thiệu, mục tiêu</label><textarea id="cd" rows="3" maxlength="500"></textarea></div>
+                <div class="msg full" id="cmsg" role="alert"></div>
+                <button class="primary full" type="submit" id="clubSubmit">Thêm câu lạc bộ</button>
+              </form>
+            </div>
+            <div class="card">
+              <div class="ch"><h2>📋 Danh sách câu lạc bộ</h2><span id="clsum" class="sum"></span></div>
+              <div class="toolbar">
+                <input id="clq" type="search" class="view grow" placeholder="🔎 Tìm tên CLB, người phụ trách…" aria-label="Tìm câu lạc bộ">
+                <select id="clf" class="view" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>
+              </div>
+              <div id="clubList"></div>
+            </div>
+          </div>
+          <div class="card" id="memCard">
+            <div class="ch"><h2>👥 Thành viên câu lạc bộ</h2><span id="memSum" class="sum"></span></div>
+            <div class="toolbar">
+              <label for="cmClub" class="tl">Câu lạc bộ</label>
+              <select id="cmClub" class="view" aria-label="Chọn câu lạc bộ"></select>
+              <input id="memQ" type="search" class="view grow" placeholder="🔎 Tìm thành viên, lớp…" aria-label="Tìm thành viên">
+              <button type="button" class="ghost view" id="memExp">⬇️ Tải danh sách (.xlsx)</button>
+            </div>
+            <div id="memInfo"></div>
+            <div class="grid-side">
+              <div class="gs-main"><div class="tblwrap" id="memList"></div></div>
+              <div class="gs-side">
+                <div class="mem-form" id="memFormCard">
+                  <div class="ch"><h2 id="memFormTitle">➕ Thêm thành viên</h2><button type="button" class="ghost sm" id="memCancel" hidden>Hủy sửa</button></div>
+                  <form id="memForm" class="row">
+                    <div class="field"><label for="mcl">Lớp</label><input id="mcl" placeholder="VD: 9/9 hoặc 8A1" list="cls-list" autocomplete="off"></div>
+                    <div class="field"><label for="mrole">Vai trò</label><select id="mrole"></select></div>
+                    <div class="field full"><label for="mnm">Họ và tên</label><input id="mnm" placeholder="Gõ để chọn từ danh sách lớp" list="clubStuList" autocomplete="off" maxlength="80"><datalist id="clubStuList"></datalist></div>
+                    <div class="msg full" id="memMsg" role="alert"></div>
+                    <button class="primary full" type="submit" id="memSubmit">Thêm vào câu lạc bộ</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- ===== QUẢN LÝ ===== -->
         <section id="pAdmin" class="page" hidden>
           <div class="ph"><div><h1>⚙️ Quản lý</h1><p>Tài khoản, phân quyền, dữ liệu và cấu hình thi đua.</p></div></div>
@@ -616,6 +696,7 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
                 <button type="button" class="ghost view" id="expViol">⬇️ Sổ vi phạm (.xlsx)</button>
                 <button type="button" class="ghost view" id="expRank">⬇️ Xếp hạng tuần (.xlsx)</button>
                 <button type="button" class="ghost view" id="expMove">⬇️ Phong trào (.xlsx)</button>
+                <button type="button" class="ghost view" id="expClub">⬇️ Câu lạc bộ (.xlsx)</button>
               </div>
             </div>
           </div>
@@ -745,9 +826,9 @@ $('#logout').onclick=()=>{curRole=null;curAcct=null;whoEdit(false);exitAllEdits(
   try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}document.title='Quản lý Đội'};
 
 // ===== PHÂN QUYỀN =====
-// Mỗi vai trò bản demo được sửa những tab nào (pMove = Phong trào, pViol = Vi phạm, pRank = Thi đua tuần, pStu = Học sinh).
+// Mỗi vai trò bản demo được sửa những tab nào (pMove = Phong trào, pViol = Vi phạm, pRank = Thi đua tuần, pStu = Học sinh, pClub = Câu lạc bộ).
 // Tab không có trong danh sách: chỉ xem. Tài khoản trường (đăng nhập tên + mật khẩu): sửa được tất cả, như cũ.
-const ALL_TABS=['pMove','pViol','pRank','pStu'];
+const ALL_TABS=['pMove','pViol','pRank','pStu','pClub'];
 const ROLE_PERMS={
   // QUẢN LÝ
   'Tổng phụ trách':              ALL_TABS,
@@ -764,8 +845,8 @@ const ROLE_PERMS={
   'Cờ đỏ trực cổng':             ['pViol','pStu']     // ghi vi phạm + danh sách học sinh
 };
 let curRole=null;
-const TAB_OF={movements:'pMove',violations:'pViol',bonuses:'pRank',students:'pStu'};
-const TAB_NAME={pMove:'Phong trào',pViol:'Vi phạm',pRank:'Thi đua tuần',pStu:'Học sinh'};
+const TAB_OF={movements:'pMove',violations:'pViol',bonuses:'pRank',students:'pStu',clubs:'pClub',clubMembers:'pClub'};
+const TAB_NAME={pMove:'Phong trào',pViol:'Vi phạm',pRank:'Thi đua tuần',pStu:'Học sinh',pClub:'Câu lạc bộ'};
 function canEdit(tab){
   if(!curRole)return true;
   return (ROLE_PERMS[curRole]||[]).includes(tab); // vai trò lạ (không có trong bảng): chỉ xem
@@ -773,7 +854,7 @@ function canEdit(tab){
 const denyMsg=tab=>'Vai trò "'+curRole+'" chỉ được xem mục '+TAB_NAME[tab]+', không được thêm, sửa hay xóa.';
 const VIEW_OK='.view'; // ô xem theo ngày/tuần/lớp, tìm kiếm, lọc, tải về (có class "view"): ai cũng dùng được
 function applyPerms(){
-  ['pMove','pViol','pRank','pStu'].forEach(tab=>{
+  ALL_TABS.forEach(tab=>{
     const sec=$('#'+tab);if(!sec)return;
     const ok=canEdit(tab),note=sec.querySelector('.ro-note');
     sec.classList.toggle('ro',!ok);
@@ -886,7 +967,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbxfQMUTh78chKqm5LKTFHm3I5vJfA2Oks_fwWI2zBbvC3q0WOmUoeSbEqg7x2kbyP66hQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbwm4o84bo4zhBD6KlJ52fBnZwwyBILU5Xo_rsbXofloGsBQF2HeUaM8grfxF-6Picp0JA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 1000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -900,8 +981,8 @@ const vdate=iso=>String(iso).split('-').reverse().join('/');
 // Chuẩn hóa tên lớp: " 9 / 9 " → "9/9", "8a1" → "8A1"
 const normCls=t=>String(t||'').trim().toUpperCase().replace(/\s*([\/.\-])\s*/g,'/').replace(/\s+/g,'');
 
-let data={movements:[],violations:[],bonuses:[],students:[]};
-const loadLocal=()=>{try{return Object.assign({movements:[],violations:[],bonuses:[]},JSON.parse(localStorage.getItem(DK)))}catch(e){return {movements:[],violations:[],bonuses:[]}}};
+let data={movements:[],violations:[],bonuses:[],students:[],clubs:[],clubMembers:[]};
+const loadLocal=()=>{const d0=()=>({movements:[],violations:[],bonuses:[],students:[],clubs:[],clubMembers:[]});try{return Object.assign(d0(),JSON.parse(localStorage.getItem(DK)))}catch(e){return d0()}};
 const saveLocal=()=>{try{localStorage.setItem(DK,JSON.stringify(data))}catch(e){}};
 const setSync=(t,ok)=>{const e=$('#sync');if(e){e.textContent=t;e.style.color=ok?'#15803d':'#b45309'}};
 if(!useApi){data=loadLocal();setSync('chưa nối Google Sheets: chỉ lưu trên máy này',false)}
@@ -931,6 +1012,8 @@ async function refresh(){
     data.violations=(j.violations||[]).sort((a,b)=>a.id-b.id);
     data.bonuses=(j.bonuses||[]).sort((a,b)=>a.id-b.id);
     if(Array.isArray(j.students)){data.students=j.students.map(normStu);stuLoaded=true}
+    clubApiOk=Array.isArray(j.clubs); // Code.gs cũ chưa có Câu lạc bộ
+    if(clubApiOk){data.clubs=j.clubs.sort((a,b)=>a.id-b.id);data.clubMembers=(j.clubMembers||[]).map(m=>Object.assign(m,{club:String(m.club)})).sort((a,b)=>a.id-b.id)}
     if(j.roles&&typeof j.roles==='object'&&!Array.isArray(j.roles)){roleHolders=j.roles;saveRoleCache();paintHolders();syncWho()}
     if(typeof j.rules==='string'&&document.activeElement!==$('#rl-note')&&!rlDirty)$('#rl-note').value=j.rules;
     render();
@@ -1039,7 +1122,7 @@ function renderViol(){
     :'<div class="empty">'+(r==='day'?'Ngày '+vdate(from)+' chưa có vi phạm nào khớp bộ lọc. 👍':'Không có vi phạm nào khớp bộ lọc.')+'</div>';
   bindRows(box,'violations',v=>'lỗi "'+v.type+'" của '+v.name+' ('+v.cls+')',v=>startEdit('violations',v));
 }
-function render(){renderMoves();renderViol();renderRank();updateClassList();renderStu();updateStuHint();
+function render(){renderMoves();renderViol();renderRank();updateClassList();renderStu();updateStuHint();renderClubs();
   if(document.body.classList.contains('in')){renderHome();renderAdmin()}}
 
 $('#moveForm').onsubmit=async e=>{
@@ -1513,8 +1596,8 @@ $('#sClear').onclick=async()=>{
 // =====================================================================
 // ===== GIAO DIỆN QUẢN TRỊ: menu trái, chuyển trang, thông báo nổi =====
 // =====================================================================
-const PAGES={pHome:['tong-quan','Tổng quan'],pViol:['vi-pham','Vi phạm'],pRank:['thi-dua','Thi đua'],pMove:['phong-trao','Phong trào'],pStu:['hoc-sinh','Học sinh'],pAdmin:['quan-ly','Quản lý']};
-const TAB_ORDER=['pViol','pRank','pMove','pStu'];
+const PAGES={pHome:['tong-quan','Tổng quan'],pViol:['vi-pham','Vi phạm'],pRank:['thi-dua','Thi đua'],pMove:['phong-trao','Phong trào'],pStu:['hoc-sinh','Học sinh'],pClub:['cau-lac-bo','Câu lạc bộ'],pAdmin:['quan-ly','Quản lý']};
+const TAB_ORDER=['pViol','pRank','pMove','pStu','pClub'];
 let curPage='pHome';
 function pageFromHash(){const h=decodeURIComponent(location.hash.slice(1));return Object.keys(PAGES).find(k=>PAGES[k][0]===h)}
 function go(p,replace){
@@ -1526,7 +1609,7 @@ function go(p,replace){
   if(location.hash!==h){try{if(replace)history.replaceState(null,'',h);else location.hash=h}catch(e){}}
   document.title=PAGES[p][1]+' · Quản lý Đội';
   sideOpen(false);
-  if(p==='pHome')renderHome();else if(p==='pRank')renderRank();else if(p==='pStu')renderStu();else if(p==='pAdmin')renderAdmin();
+  if(p==='pHome')renderHome();else if(p==='pRank')renderRank();else if(p==='pStu')renderStu();else if(p==='pClub')renderClubs();else if(p==='pAdmin')renderAdmin();
   window.scrollTo(0,0);
 }
 addEventListener('hashchange',()=>{if(!document.body.classList.contains('in'))return;const p=pageFromHash();if(p&&p!==curPage)go(p,true)});
@@ -1563,7 +1646,7 @@ function fillUser(){
 }
 
 // ----- Chế độ sửa dùng chung cho các form -----
-const editing={movements:null,violations:null,bonuses:null,students:null};
+const editing={movements:null,violations:null,bonuses:null,students:null,clubs:null,clubMembers:null};
 const typeIdx=(arr,v)=>{const i=arr.findIndex(t=>t[0]===v);return i<0?arr.length-1:i};
 const EDIT_UI={
   movements:{card:'#moveFormCard',title:'#moveFormTitle',btn:'#moveSubmit',cancel:'#moveCancel',msg:'#mmsg',focus:'#mn',
@@ -1581,7 +1664,15 @@ const EDIT_UI={
   students:{card:'#stuFormCard',title:'#stuFormTitle',btn:'#stuSubmit',cancel:'#stuCancel',msg:'#sfmsg',focus:'#sfn',
     t:['➕ Thêm học sinh','✏️ Sửa thông tin học sinh'],b:['Thêm vào danh sách','Cập nhật học sinh'],
     fill:x=>{$('#sfc').value=x.cls;$('#sfg').value=x.gender==='Nữ'?'Nữ':'Nam';$('#sfn').value=x.name},
-    clear:()=>{$('#sfn').value=''}}
+    clear:()=>{$('#sfn').value=''}},
+  clubs:{card:'#clubFormCard',title:'#clubFormTitle',btn:'#clubSubmit',cancel:'#clubCancel',msg:'#cmsg',focus:'#cn',
+    t:['➕ Thêm câu lạc bộ','✏️ Sửa câu lạc bộ'],b:['Thêm câu lạc bộ','Cập nhật câu lạc bộ'],
+    fill:x=>{$('#cn').value=x.name;$('#cf').value=fieldOf(x.field)[0];$('#cl').value=x.leader||'';$('#cs').value=x.schedule||'';$('#cp').value=x.place||'';$('#cd').value=x.desc||''},
+    clear:()=>$('#clubForm').reset()},
+  clubMembers:{card:'#memFormCard',title:'#memFormTitle',btn:'#memSubmit',cancel:'#memCancel',msg:'#memMsg',focus:'#mnm',
+    t:['➕ Thêm thành viên','✏️ Sửa thành viên'],b:['Thêm vào câu lạc bộ','Cập nhật thành viên'],
+    fill:x=>{$('#mcl').value=x.cls;fillClubStuList();$('#mnm').value=x.name;$('#mrole').value=CLUB_ROLES.includes(x.role)?x.role:CLUB_ROLES[0]},
+    clear:()=>{$('#mnm').value='';$('#mrole').selectedIndex=0}}
 };
 function setEditUI(col,on){
   const u=EDIT_UI[col];
@@ -1600,7 +1691,7 @@ function exitAllEdits(){Object.keys(editing).forEach(exitEdit)}
 Object.keys(EDIT_UI).forEach(col=>{$(EDIT_UI[col].cancel).onclick=()=>{exitEdit(col);$(EDIT_UI[col].msg).textContent=''}});
 
 // ----- Trang Tổng quan -----
-const HOME_APPS=[['pViol','📝','t-r','Vi phạm'],['pRank','🏆','t-o','Thi đua'],['pMove','🚩','t-b','Phong trào'],['pStu','👥','t-p','Học sinh'],['pAdmin','⚙️','t-c','Quản lý'],['ai','🤖','t-g','Trợ lý AI'],['xlsx','📥','t-b','Excel học sinh']];
+const HOME_APPS=[['pViol','📝','t-r','Vi phạm'],['pRank','🏆','t-o','Thi đua'],['pMove','🚩','t-b','Phong trào'],['pStu','👥','t-p','Học sinh'],['pClub','🎯','t-p','Câu lạc bộ'],['pAdmin','⚙️','t-c','Quản lý'],['ai','🤖','t-g','Trợ lý AI'],['xlsx','📥','t-b','Excel học sinh']];
 $('#homeApps').innerHTML=HOME_APPS.map(a=>'<button type="button" class="appb" data-app="'+a[0]+'"><i class="'+a[2]+'">'+a[1]+'</i>'+a[3]+'</button>').join('');
 $('#homeApps').onclick=e=>{const b=e.target.closest('.appb');if(!b)return;const k=b.dataset.app;
   if(k==='ai')aiOpen(true);else if(k==='xlsx')$('#sExp').click();else go(k)};
@@ -1656,6 +1747,8 @@ function renderHome(){
   V.forEach(v=>ev.push([tm(v.id),'📝','t-r','<b>'+esc(v.by||'?')+'</b> ghi lỗi '+esc(v.type)+' cho '+esc(v.name)+' ('+esc(v.cls)+')']));
   data.bonuses.forEach(b=>ev.push([tm(b.id),'⭐','t-g','<b>'+esc(b.by||'?')+'</b> cộng +'+(Number(b.pts)||0)+' điểm cho lớp '+esc(b.cls)+' ('+esc(b.reason)+')']));
   MV.forEach(m=>ev.push([tm(m.id),'🚩','t-b','<b>'+esc(m.by||'?')+'</b> tạo phong trào '+esc(m.name)]));
+  data.clubs.forEach(c=>ev.push([tm(c.id),'🎯','t-p','<b>'+esc(c.by||'?')+'</b> lập '+esc(c.name)]));
+  data.clubMembers.forEach(m=>ev.push([tm(m.id),'🎯','t-p','<b>'+esc(m.by||'?')+'</b> thêm '+esc(m.name)+' ('+esc(m.cls)+') vào '+esc((clubById(m.club)||{name:'câu lạc bộ'}).name)]));
   L.forEach(s=>{if(!isSample(s))ev.push([stuT(s.id),'👤','t-p','<b>'+esc(s.by||'?')+'</b> thêm '+esc(s.name)+' vào lớp '+esc(s.cls)])});
   const rec=ev.filter(e=>e[0]).sort((a,b)=>b[0]-a[0]).slice(0,7);
   $('#homeAct').innerHTML=rec.length?rec.map(e=>'<div class="act-it"><i class="'+e[2]+'">'+e[1]+'</i><div>'+e[3]+'<small>'+ago(e[0])+'</small></div></div>').join(''):'<div class="empty">Chưa có hoạt động nào.</div>';
@@ -1758,6 +1851,162 @@ $('#whoForm').onsubmit=async e=>{
 };
 paintHolders();
 
+// =====================================================================
+// ===== CÂU LẠC BỘ: danh sách CLB + thành viên (Google Sheets: CauLacBo, ThanhVienCLB) =====
+// =====================================================================
+// [lĩnh vực, biểu tượng, màu]
+const CLUB_FIELDS=[['Học thuật','📚','t-b'],['STEM – Công nghệ','🔬','t-c'],['Thể thao','⚽','t-g'],['Văn nghệ – Nghệ thuật','🎨','t-p'],['Kỹ năng sống','🧭','t-o'],['Tình nguyện','🤝','t-r'],['Khác','🎯','t-x']];
+const CLUB_ROLES=['Thành viên','Chủ nhiệm CLB','Phó chủ nhiệm CLB','Thư ký'];
+const fieldOf=f=>CLUB_FIELDS.find(x=>x[0]===f)||CLUB_FIELDS[CLUB_FIELDS.length-1];
+let clubSel='',clubApiOk=true;
+$('#cf').innerHTML=CLUB_FIELDS.map(f=>'<option>'+esc(f[0])+'</option>').join('');
+$('#clf').innerHTML='<option value="">Mọi lĩnh vực</option>'+CLUB_FIELDS.map(f=>'<option>'+esc(f[0])+'</option>').join('');
+$('#mrole').innerHTML=CLUB_ROLES.map(r=>'<option>'+esc(r)+'</option>').join('');
+const membersOf=id=>data.clubMembers.filter(m=>String(m.club)===String(id));
+const clubById=id=>data.clubs.find(c=>String(c.id)===String(id));
+
+// Thêm nhiều dòng một lần (dùng cho CLB mẫu)
+async function putMany(col,list,msgEl){
+  if(!canEdit(TAB_OF[col])){say(msgEl,denyMsg(TAB_OF[col]));return false}
+  if(!list.length)return true;
+  if(!useApi){data[col]=data[col].concat(list);saveLocal();render();return true}
+  busy++;const backup=data[col];data[col]=data[col].concat(list);render();
+  try{await apiPost({action:'addMany',type:col,data:list});return true}
+  catch(e){data[col]=backup;render();say(msgEl,'Không lưu được lên Google Sheets: '+e.message);return false}
+  finally{busy--;refresh()}
+}
+async function removeMany(col,ids){
+  const set=new Set(ids.map(String));
+  if(!useApi){data[col]=data[col].filter(x=>!set.has(String(x.id)));saveLocal();render();return true}
+  busy++;const backup=data[col];data[col]=data[col].filter(x=>!set.has(String(x.id)));render();
+  try{await apiPost({action:'deleteMany',type:col,ids:[...set]});return true}
+  catch(e){data[col]=backup;render();toast('Chưa xóa được thành viên của câu lạc bộ: '+e.message,false);return false}
+  finally{busy--;refresh()}
+}
+
+function renderClubs(){
+  if(!$('#clubList'))return;
+  const C=data.clubs,M=data.clubMembers;
+  $('#clubWarn').hidden=clubApiOk;
+  if(!clubApiOk)$('#clubWarn').innerHTML='⚠️ Google Sheets chưa có phần Câu lạc bộ: hãy dán <b>Code.gs</b> mới vào Apps Script rồi triển khai <b>phiên bản mới</b>. Trước đó chưa lưu được câu lạc bộ.';
+  const cnt={};M.forEach(m=>{cnt[m.club]=(cnt[m.club]||0)+1});
+  const big=C.slice().sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0))[0];
+  const stuIn=new Set(M.map(m=>m.cls+'|'+keyName(m.name))).size;
+  $('#clubStats').innerHTML=statTile('🎯','t-p',C.length,'Câu lạc bộ')+statTile('👥','t-b',stuIn.toLocaleString('vi-VN'),'Học sinh tham gia')+
+    statTile('🧩','t-g',new Set(C.map(c=>c.field)).size,'Lĩnh vực')+statTile('🏅','t-o',big&&cnt[big.id]?esc(big.name):'—','Đông thành viên nhất',big&&cnt[big.id]?'· '+cnt[big.id]+' em':'');
+  const nb=$('#nbClub');nb.hidden=!C.length;nb.textContent=C.length;
+  // danh sách CLB
+  const q=keyName($('#clq').value),f=$('#clf').value;
+  const l=C.filter(c=>(!f||c.field===f)&&(!q||keyName(c.name+' '+(c.leader||'')+' '+(c.place||'')).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+  $('#clsum').textContent=l.length+'/'+C.length+' câu lạc bộ';
+  if(!clubById(clubSel))clubSel=C.length?String(C.slice().sort((a,b)=>a.name.localeCompare(b.name,'vi'))[0].id):'';
+  const box=$('#clubList');
+  box.innerHTML=l.length?'<div class="clubs">'+l.map(c=>{const fd=fieldOf(c.field),n=cnt[c.id]||0;
+    return '<div class="club'+(String(c.id)===clubSel?' sel':'')+'"><div class="club-h"><i class="'+fd[2]+'">'+fd[1]+'</i><div style="min-width:0"><b>'+esc(c.name)+'</b><span class="pill '+fd[2]+'">'+esc(c.field||'Khác')+'</span></div></div>'+
+      '<div class="club-meta">'+(c.leader?'<span>👤 '+esc(c.leader)+'</span>':'')+(c.schedule?'<span>🕒 '+esc(c.schedule)+'</span>':'')+(c.place?'<span>📍 '+esc(c.place)+'</span>':'')+'</div>'+
+      (c.desc?'<p class="club-desc">'+esc(c.desc)+'</p>':'')+
+      '<div class="club-f"><button type="button" class="ib mem view" data-id="'+esc(c.id)+'">👥 '+n+' thành viên ›</button><button type="button" class="ib edit" data-id="'+esc(c.id)+'" title="Sửa">✏️<span class="t"> Sửa</span></button><button type="button" class="ib rm" data-id="'+esc(c.id)+'" title="Xóa">🗑️<span class="t"> Xóa</span></button></div></div>'}).join('')+'</div>'
+    :'<div class="empty">'+(C.length?'Không có câu lạc bộ nào khớp bộ lọc.':'Chưa có câu lạc bộ nào. Thêm ở khung bên cạnh'+(canEdit('pClub')?', hoặc <button type="button" class="ghost sm" id="clubSample">✨ Tạo 5 câu lạc bộ mẫu</button>':'.'))+'</div>';
+  box.querySelectorAll('.ib.mem').forEach(b=>b.onclick=()=>{clubSel=b.dataset.id;renderClubs();$('#memCard').scrollIntoView({block:'start',behavior:'smooth'})});
+  box.querySelectorAll('.ib.edit').forEach(b=>b.onclick=()=>{const c=clubById(b.dataset.id);if(c&&canEdit('pClub'))startEdit('clubs',c)});
+  box.querySelectorAll('.ib.rm').forEach(b=>b.onclick=()=>{const c=clubById(b.dataset.id);if(c)deleteClub(c)});
+  const smp=$('#clubSample');if(smp)smp.onclick=makeSampleClubs;
+  renderMembers();
+}
+function renderMembers(){
+  const sel=$('#cmClub'),C=data.clubs.slice().sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+  const opts=C.length?C.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join(''):'<option value="">(chưa có câu lạc bộ)</option>';
+  if(sel.dataset.h!==opts){sel.innerHTML=opts;sel.dataset.h=opts}
+  sel.value=clubSel;
+  const c=clubById(clubSel),all=c?membersOf(c.id):[];
+  const ro=r=>{const i=CLUB_ROLES.indexOf(r);return i<0?0:i===0?9:i};
+  const q=keyName($('#memQ').value);
+  const l=all.filter(m=>!q||keyName(m.name+' '+m.cls).includes(q)).sort((a,b)=>ro(a.role)-ro(b.role)||clsSort(a.cls,b.cls)||viSort(a,b));
+  $('#memSum').textContent=c?l.length+'/'+all.length+' thành viên':'';
+  const lead=all.filter(m=>m.role&&m.role!=='Thành viên');
+  $('#memInfo').innerHTML=c?'<div class="mem-info"><span>🎯 <b>'+esc(c.name)+'</b></span>'+(c.leader?'<span>👤 Phụ trách: <b>'+esc(c.leader)+'</b></span>':'')+(lead.length?'<span>⭐ '+lead.map(m=>esc(m.role)+': <b>'+esc(m.name)+'</b>').join(' · ')+'</span>':'')+'<span>🏫 '+new Set(all.map(m=>m.cls)).size+' lớp</span></div>':'';
+  const box=$('#memList');
+  box.innerHTML=!c?'<div class="empty">Tạo câu lạc bộ trước, rồi thêm thành viên vào đây.</div>':l.length?
+    '<table class="tb"><thead><tr><th class="hm">#</th><th>Họ và tên</th><th>Lớp</th><th>Vai trò</th><th class="hm">Người thêm</th><th></th></tr></thead><tbody>'+
+    l.map((m,i)=>'<tr><td class="hm">'+(i+1)+'</td><td><b>'+esc(m.name)+'</b></td><td class="nw">'+esc(m.cls)+'</td><td>'+(m.role&&m.role!=='Thành viên'?pill(m.role,'t-p'):'<span class="muted">Thành viên</span>')+'</td><td class="hm">'+esc(m.by||'')+'</td>'+actBtns(m.id)+'</tr>').join('')+'</tbody></table>'
+    :'<div class="empty">'+(all.length?'Không có thành viên nào khớp ô tìm kiếm.':'Câu lạc bộ chưa có thành viên.')+'</div>';
+  if(c)bindRows(box,'clubMembers',m=>m.name+' ('+m.cls+') khỏi '+(clubById(m.club)||{name:'câu lạc bộ'}).name,m=>startEdit('clubMembers',m));
+}
+async function deleteClub(c){
+  const mem=membersOf(c.id);
+  if(!confirm('Xóa câu lạc bộ "'+c.name+'"'+(mem.length?' cùng '+mem.length+' thành viên':'')+'?'))return;
+  if(editing.clubs&&String(editing.clubs.id)===String(c.id))exitEdit('clubs');
+  const ok=await remove('clubs',c.id,'câu lạc bộ "'+c.name+'"'+(mem.length?' và '+mem.length+' thành viên':''));
+  if(ok&&mem.length)await removeMany('clubMembers',mem.map(m=>m.id));
+}
+$('#clq').oninput=$('#clf').onchange=renderClubs;
+$('#memQ').oninput=renderMembers;
+$('#cmClub').onchange=()=>{clubSel=$('#cmClub').value;if(editing.clubMembers)exitEdit('clubMembers');renderClubs()};
+// gợi ý tên học sinh theo lớp đã nhập
+let _cdl='';
+function fillClubStuList(){
+  const c=normCls($('#mcl').value),h=c?inClass(c).map(s=>'<option value="'+esc(s.name)+'">').join(''):'';
+  if(h!==_cdl){$('#clubStuList').innerHTML=h;_cdl=h}
+}
+$('#mcl').addEventListener('input',fillClubStuList);
+$('#mcl').addEventListener('change',()=>{$('#mcl').value=normCls($('#mcl').value);fillClubStuList()});
+
+$('#clubForm').onsubmit=async e=>{
+  e.preventDefault();const m=$('#cmsg');
+  const name=normName($('#cn').value).replace(/^clb(?=\s|$)/i,'CLB').slice(0,80);
+  if(!name){say(m,'Nhập tên câu lạc bộ.');$('#cn').focus();return}
+  const ed=editing.clubs;
+  if(data.clubs.some(c=>keyName(c.name)===keyName(name)&&(!ed||String(c.id)!==String(ed.id)))){say(m,'Đã có câu lạc bộ "'+name+'".');return}
+  // Sửa giữ nguyên id để thành viên vẫn thuộc câu lạc bộ này
+  const obj={id:ed?ed.id:Date.now(),name,field:$('#cf').value,leader:normName($('#cl').value).slice(0,80),schedule:$('#cs').value.trim().slice(0,120),place:$('#cp').value.trim().slice(0,80),desc:$('#cd').value.trim().slice(0,500),by:ed?ed.by:who()};
+  if(ed){if(await replaceItem('clubs',ed.id,obj,m)){exitEdit('clubs');say(m,'Đã cập nhật câu lạc bộ "'+name+'".',true)}return}
+  if(await put('clubs',obj,m)){$('#clubForm').reset();clubSel=String(obj.id);renderClubs();say(m,'Đã thêm câu lạc bộ "'+name+'".',true)}
+};
+$('#memForm').onsubmit=async e=>{
+  e.preventDefault();const m=$('#memMsg'),c=clubById($('#cmClub').value);
+  if(!c){say(m,'Hãy tạo hoặc chọn câu lạc bộ trước.');return}
+  const cls=normCls($('#mcl').value),name=titleName(normName($('#mnm').value)).slice(0,80);
+  if(!cls||!CLS_RE.test(cls)){say(m,'Nhập lớp, ví dụ 9/9 hoặc 8A1.');$('#mcl').focus();return}
+  if(!name){say(m,'Nhập họ tên học sinh.');$('#mnm').focus();return}
+  const ed=editing.clubMembers;
+  if(membersOf(c.id).some(x=>x.cls===cls&&keyName(x.name)===keyName(name)&&(!ed||String(x.id)!==String(ed.id)))){say(m,name+' ('+cls+') đã ở trong '+c.name+'.');return}
+  const obj={id:Date.now(),club:String(c.id),cls,name,role:$('#mrole').value,by:ed?ed.by:who()};
+  if(ed){if(await replaceItem('clubMembers',ed.id,obj,m)){exitEdit('clubMembers');say(m,'Đã cập nhật '+name+' ('+cls+').',true)}return}
+  if(await put('clubMembers',obj,m)){
+    $('#mnm').value='';$('#mrole').selectedIndex=0;
+    say(m,'Đã thêm '+name+' ('+cls+') vào '+c.name+'.'+(students.list.some(s=>s.cls===cls&&keyName(s.name)===keyName(name))?'':' (Chưa có trong danh sách học sinh lớp '+cls+'.)'),true);
+    $('#mnm').focus();
+  }
+};
+$('#memExp').onclick=()=>{
+  const c=clubById(clubSel);if(!c){toast('Chưa có câu lạc bộ để tải.',false);return}
+  const rows=[['STT','Họ và tên','Lớp','Vai trò','Câu lạc bộ']].concat(membersOf(c.id).sort((a,b)=>clsSort(a.cls,b.cls)||viSort(a,b)).map((x,i)=>[i+1,x.name,x.cls,x.role||'Thành viên',c.name]));
+  dlXlsx(rows,[6,28,9,18,26],c.name.slice(0,28),'thanh-vien-'+keyName(c.name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.xlsx');
+};
+$('#expClub').onclick=()=>{
+  const cnt={};data.clubMembers.forEach(m=>{cnt[m.club]=(cnt[m.club]||0)+1});
+  dlXlsx([['Câu lạc bộ','Lĩnh vực','Người phụ trách','Lịch sinh hoạt','Địa điểm','Số thành viên','Giới thiệu']].concat(
+    data.clubs.slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).map(c=>[c.name,c.field||'',c.leader||'',c.schedule||'',c.place||'',cnt[c.id]||0,c.desc||''])),
+    [26,20,24,20,16,12,40],'Câu lạc bộ','cau-lac-bo-'+today()+'.xlsx');
+};
+// 5 câu lạc bộ mẫu, thành viên lấy ngẫu nhiên từ danh sách học sinh
+async function makeSampleClubs(){
+  const m=$('#cmsg');if(!canEdit('pClub')){say(m,denyMsg('pClub'));return}
+  const t=Date.now(),S=[['CLB Tiếng Anh','Học thuật','Cô Nguyễn Thị Lan','Thứ Ba, 16h30–17h30','Phòng 201','Giao tiếp tiếng Anh, thi hùng biện và đọc sách tiếng Anh.'],
+    ['CLB Robotics','STEM – Công nghệ','Thầy Trần Minh Đức','Thứ Năm, 15h–17h','Phòng Tin học','Lắp ráp, lập trình robot và chuẩn bị các cuộc thi STEM.'],
+    ['CLB Bóng đá','Thể thao','Thầy Lê Văn Hùng','Thứ Bảy, 7h–9h','Sân trường','Tập luyện và thi đấu giao hữu giữa các chi đội.'],
+    ['CLB Văn nghệ','Văn nghệ – Nghệ thuật','Cô Phạm Thu Hà','Thứ Sáu, 16h–17h30','Phòng Đội','Múa, hát, nhạc cụ, chuẩn bị các tiết mục cho ngày lễ.'],
+    ['CLB Kỹ năng sống','Kỹ năng sống','Cô Võ Ngọc Mai','Thứ Tư, 16h–17h','Thư viện','Kỹ năng tự bảo vệ, sơ cứu, thuyết trình và làm việc nhóm.']];
+  const clubs=S.map((x,i)=>({id:t+i,name:x[0],field:x[1],leader:x[2],schedule:x[3],place:x[4],desc:x[5],by:who()}));
+  const pool=students.list.slice(),mem=[];let k=0;
+  clubs.forEach(c=>{for(let j=0;j<8&&pool.length;j++){const s=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    mem.push({id:t+100+(k++),club:String(c.id),cls:s.cls,name:s.name,role:j===0?'Chủ nhiệm CLB':j===1?'Phó chủ nhiệm CLB':'Thành viên',by:who()})}});
+  if(!await putMany('clubs',clubs,m))return;
+  clubSel=String(clubs[0].id);
+  if(mem.length)await putMany('clubMembers',mem,m);
+  say(m,'Đã tạo 5 câu lạc bộ mẫu'+(mem.length?' với '+mem.length+' thành viên':'')+'.',true);
+}
+
 render();
 if(useApi){
   refresh();
@@ -1818,6 +2067,7 @@ function aiContext(){
     viPhamHomNayTheoLop:todayByClass(),
     siSoTheoLop:Object.fromEntries(classesOf().map(c=>[c,students.list.filter(s=>s.cls===c).length])),
     tongHocSinh:students.list.length,
+    cauLacBo:data.clubs.map(c=>({ten:c.name,linhVuc:c.field,phuTrach:c.leader,lichSinhHoat:c.schedule,diaDiem:c.place,soThanhVien:membersOf(c.id).length})),
     nguoiDamNhanChucVu:Object.fromEntries(Object.keys(ROLE_PERMS).filter(holderOf).map(k=>[k,holderOf(k)])),
     phongTrao:data.movements.slice(-15).map(m=>({ten:m.name,batDau:m.start,ketThuc:m.end,noiDung:String(m.desc||'').slice(0,200)}))
   };
