@@ -357,6 +357,27 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
 .mem-info b{color:var(--ink)}
 @media (max-width:560px){.clubs{grid-template-columns:minmax(0,1fr)}}
 
+/* ===== Phân hiệu ===== */
+.side-br{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 6px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.14);color:#fff;font:inherit;text-align:left;cursor:pointer}
+.side-br:hover{background:rgba(255,255,255,.22)}
+.side-br>span{font-size:1.2rem}.side-br small{display:block;font-size:.62rem;letter-spacing:.1em;color:#c7d6ff;font-weight:700}
+.side-br b{display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px}
+.br-sw{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:99px;background:linear-gradient(90deg,#fef3c7,#fde68a);border:1px solid #f5c26b;margin:0}
+.br-sw select{width:auto;max-width:220px;border:0;background:transparent;color:#7a4b00;font-weight:700;font-size:.85rem;padding:5px 4px;cursor:pointer}
+.br-sw select:disabled{cursor:default;opacity:1;-webkit-appearance:none;appearance:none}
+.br-sw select:focus{box-shadow:none!important}
+.login-br{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:700;font-size:.9rem}
+.login-br select{width:auto;padding:8px 10px;border-radius:10px;border:0;background:#fff;color:#1e3a8a;font-weight:700}
+.login-br small{flex-basis:100%;font-weight:400;font-size:.72rem;color:#c9d8ff}
+.br-off{opacity:.65}
+.club .br-st{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;font-size:.8rem;color:var(--muted)}
+.club .br-st b{color:var(--ink);font-size:.95rem}
+tr.cur-br td{background:rgba(245,184,0,.14)}
+@media (max-width:900px){.br-sw select{max-width:150px}}
+@media (max-width:560px){.br-sw{padding:2px 4px 2px 8px}.br-sw select{max-width:118px;font-size:.78rem}}
+
 /* ===== Trợ lý AI ===== */
 .ai-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;width:58px;height:58px;border-radius:50%;border:0;
   background:var(--blue);color:#fff;font-size:1.7rem;cursor:pointer;box-shadow:0 8px 22px rgba(30,64,175,.45)}
@@ -403,9 +424,11 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
   <main class="app" id="app">
     <aside class="side" id="side" aria-label="Menu chức năng">
       <div class="side-brand"><span class="logo">⚜️</span><div><b>QUẢN LÝ ĐỘI</b><small>Thi đua &amp; phong trào</small></div></div>
+      <button type="button" class="side-br" data-go="pPH" title="Phân hiệu đang quản lý"><span>🏢</span><div><small>ĐANG QUẢN LÝ</small><b id="sideBr"></b></div></button>
       <nav class="side-nav">
         <div class="side-cap">CHỨC NĂNG</div>
         <button class="nav" data-p="pHome"><span class="ni">🏠</span><span class="nt">Tổng quan</span></button>
+        <button class="nav" data-p="pPH"><span class="ni">🏢</span><span class="nt">Phân hiệu</span><em class="nb nb-soft" id="nbPH" hidden></em></button>
         <button class="nav" data-p="pViol"><span class="ni">📝</span><span class="nt">Vi phạm</span><em class="nb" id="nbViol" hidden></em></button>
         <button class="nav" data-p="pRank"><span class="ni">🏆</span><span class="nt">Thi đua</span></button>
         <button class="nav" data-p="pMove"><span class="ni">🚩</span><span class="nt">Phong trào</span><em class="nb" id="nbMove" hidden></em></button>
@@ -422,7 +445,7 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
         <button class="hamb" id="hamb" aria-label="Mở menu" aria-controls="side" aria-expanded="false">☰</button>
         <div class="top-user"><b id="whoLine"><span class="wl">Xin chào, <span id="who"></span></span><button type="button" class="pen-btn" id="whoEdit" title="Sửa tên hiển thị" aria-label="Sửa tên hiển thị">✏️</button></b>
           <form class="who-form" id="whoForm" hidden><label for="whoIn" class="sr">Tên hiển thị</label><span class="wf-lb">Xin chào,</span><input id="whoIn" maxlength="80" placeholder="VD: Nguyễn Văn A" autocomplete="name"><button class="ib edit" type="submit">💾 Lưu</button><button class="ib" type="button" id="whoCancel">Hủy</button></form><small><span id="topRole"></span> · <span id="sync">đang kết nối…</span></small></div>
-        <div class="top-right"><span class="chip-date" id="topDate"></span><button class="ghost" id="logout">Đăng xuất</button></div>
+        <div class="top-right"><label class="br-sw" title="Chọn phân hiệu"><span aria-hidden="true">🏢</span><span class="sr">Phân hiệu đang quản lý</span><select id="brSel"></select></label><span class="chip-date" id="topDate"></span><button class="ghost" id="logout">Đăng xuất</button></div>
       </header>
 
       <div class="content">
@@ -456,6 +479,37 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
               <div class="card">
                 <div class="ch"><h2>🕘 Hoạt động gần đây</h2></div>
                 <div id="homeAct"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PHÂN HIỆU (trang quản lý tổng thể) ===== -->
+        <section id="pPH" class="page" hidden>
+          <div class="ph"><div><h1>🏢 Phân hiệu</h1><p>Trang quản lý tổng thể. Mỗi phân hiệu có dữ liệu riêng: học sinh, vi phạm, thi đua, phong trào, câu lạc bộ.</p></div></div>
+          <div class="ro-note" id="phNote" role="status" hidden></div>
+          <div class="stats" id="phStats"></div>
+          <div class="grid-side">
+            <div class="gs-main">
+              <div class="card">
+                <div class="ch"><h2>📋 Danh sách phân hiệu</h2><span class="sum" id="phSum"></span></div>
+                <div class="clubs" id="phList"></div>
+              </div>
+              <div class="card">
+                <div class="ch"><h2>📊 So sánh các phân hiệu</h2><span class="sum" id="phWeek"></span></div>
+                <div class="tblwrap" id="phCmp"></div>
+              </div>
+            </div>
+            <div class="gs-side">
+              <div class="card" id="phFormCard">
+                <div class="ch"><h2 id="phFormTitle">➕ Thêm phân hiệu mới</h2><button type="button" class="ghost sm" id="phCancel" hidden>Hủy sửa</button></div>
+                <form id="phForm" class="row one">
+                  <div class="field"><label for="phn">Tên phân hiệu</label><input id="phn" maxlength="40" placeholder="VD: Phân hiệu Bình An"></div>
+                  <div class="field"><label for="phc">Mã phân hiệu</label><input id="phc" maxlength="10" placeholder="VD: PH3"></div>
+                  <div class="field"><label for="pha">Địa chỉ / ghi chú</label><input id="pha" maxlength="40" placeholder="Không bắt buộc"></div>
+                  <div class="msg" id="phmsg" role="alert"></div>
+                  <button class="primary" type="submit" id="phSubmit">Thêm phân hiệu</button>
+                </form>
               </div>
             </div>
           </div>
@@ -733,6 +787,7 @@ details.card>summary{cursor:pointer;font-weight:700;color:var(--ink);list-style-
             <span class="chip">🔑 Không cần mật khẩu</span>
           </div>
         </div>
+        <label class="login-br">🏢 Vào phân hiệu <select id="loginBr"></select><small>Áp dụng cho cả vai trò demo và tài khoản trường</small></label>
         <div class="cols">
           <div>
             <h3>QUẢN LÝ</h3>
@@ -820,7 +875,7 @@ const $=s=>document.querySelector(s);
 // role: vai trò khi vào bằng bản demo; null = tài khoản trường / quản trị viên (sửa được tất cả, như cũ)
 // name: tên mặc định; role: vai trò bản demo (null = tài khoản trường / quản trị viên, sửa được tất cả); acct: tên đăng nhập
 let curAcct=null,defaultName='';
-const enter=(name,role=null,acct=null)=>{curRole=role;curAcct=acct;defaultName=name;whoEdit(false);$('#who').textContent=holderOf(nameKey())||name;fillUser();document.body.classList.add('in');applyPerms();render();go(pageFromHash()||'pHome',true);window.scrollTo(0,0)};
+const enter=(name,role=null,acct=null)=>{curRole=role;curAcct=acct;defaultName=name;whoEdit(false);setBranch($('#loginBr').value||curBranch);paintBrUI();$('#who').textContent=holderOf(nameKey())||name;fillUser();document.body.classList.add('in');applyPerms();render();go(pageFromHash()||'pHome',true);window.scrollTo(0,0)};
 document.querySelectorAll('.role').forEach(b=>b.onclick=()=>enter(b.dataset.role,b.dataset.role));
 $('#logout').onclick=()=>{curRole=null;curAcct=null;whoEdit(false);exitAllEdits();sideOpen(false);document.body.classList.remove('in');$('#u').value='';$('#p').value='';
   try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}document.title='Quản lý Đội'};
@@ -967,7 +1022,7 @@ $('#forgot').onclick=e=>{e.preventDefault();say($('#msg'),'Liên hệ quản tr�
 
 
 // ===== Báo cáo sau đăng nhập (lưu trên Google Sheets) =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbwm4o84bo4zhBD6KlJ52fBnZwwyBILU5Xo_rsbXofloGsBQF2HeUaM8grfxF-6Picp0JA/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
+const API_URL = 'https://script.google.com/macros/s/AKfycbxfQMUTh78chKqm5LKTFHm3I5vJfA2Oks_fwWI2zBbvC3q0WOmUoeSbEqg7x2kbyP66hQ/exec';                       // <-- DÁN URL Web App (kết thúc bằng /exec) vào đây
 const API_KEY = 'anh15032012';    // <-- phải GIỐNG hệt SECRET trong Code.gs
 const POLL_MS = 1000;                    // tự tải lại dữ liệu mỗi 10 giây
 
@@ -981,11 +1036,29 @@ const vdate=iso=>String(iso).split('-').reverse().join('/');
 // Chuẩn hóa tên lớp: " 9 / 9 " → "9/9", "8a1" → "8A1"
 const normCls=t=>String(t||'').trim().toUpperCase().replace(/\s*([\/.\-])\s*/g,'/').replace(/\s+/g,'');
 
-let data={movements:[],violations:[],bonuses:[],students:[],clubs:[],clubMembers:[]};
-const loadLocal=()=>{const d0=()=>({movements:[],violations:[],bonuses:[],students:[],clubs:[],clubMembers:[]});try{return Object.assign(d0(),JSON.parse(localStorage.getItem(DK)))}catch(e){return d0()}};
-const saveLocal=()=>{try{localStorage.setItem(DK,JSON.stringify(data))}catch(e){}};
+// ===== PHÂN HIỆU: mỗi bản ghi thuộc 1 phân hiệu (trường "branch") =====
+// Để KHÔNG phải sửa Code.gs, phân hiệu được ghi kèm vào cột "Người ghi" dạng "Tên [#ph2]" khi gửi lên Google Sheets,
+// rồi tự tách ra khi tải về. Dữ liệu cũ (không có dấu) thuộc Phân hiệu 1 (Trường chính).
+const DEF_BR='ph1';
+const BR_TAG=/\s*\[#([a-z0-9_-]{1,20})\]$/i;
+let curBranch=DEF_BR,branches=[];
+function decBr(x){
+  if(!x||typeof x!=='object')return x;
+  if(typeof x.by==='string'){const m=x.by.match(BR_TAG);if(m){x.by=x.by.replace(BR_TAG,'');if(!x.branch)x.branch=m[1].toLowerCase()}}
+  if(!x.branch)x.branch=DEF_BR;
+  return x;
+}
+function encBr(x){const o=Object.assign({},x),b=o.branch||DEF_BR;delete o.branch;if(b!==DEF_BR)o.by=String(o.by||'')+' [#'+b+']';return o}
+const inBr=x=>(x.branch||DEF_BR)===curBranch;
+const COLS=['movements','violations','bonuses','students','clubs','clubMembers'];
+const emptyData=()=>({movements:[],violations:[],bonuses:[],students:[],clubs:[],clubMembers:[]});
+let ALL=emptyData();   // toàn bộ dữ liệu mọi phân hiệu
+let data=emptyData();  // chỉ dữ liệu của phân hiệu đang chọn (các màn hình đọc từ đây)
+function syncView(){COLS.forEach(k=>{data[k]=ALL[k].filter(inBr)})}
+const loadLocal=()=>{try{const o=Object.assign(emptyData(),JSON.parse(localStorage.getItem(DK)));COLS.forEach(k=>{o[k]=(o[k]||[]).map(decBr)});return o}catch(e){return emptyData()}};
+const saveLocal=()=>{try{localStorage.setItem(DK,JSON.stringify(ALL))}catch(e){}};
 const setSync=(t,ok)=>{const e=$('#sync');if(e){e.textContent=t;e.style.color=ok?'#15803d':'#b45309'}};
-if(!useApi){data=loadLocal();setSync('chưa nối Google Sheets: chỉ lưu trên máy này',false)}
+if(!useApi){ALL=loadLocal();setSync('chưa nối Google Sheets: chỉ lưu trên máy này',false)}
 else setSync('đang kết nối Google Sheets...',false);
 
 async function apiGet(){
@@ -1008,13 +1081,13 @@ async function refresh(){
   try{
     const j=await apiGet();
     if(busy)return; // đang lưu dở: lần đồng bộ sau sẽ lấy dữ liệu mới
-    data.movements=(j.movements||[]).sort((a,b)=>a.id-b.id);
-    data.violations=(j.violations||[]).sort((a,b)=>a.id-b.id);
-    data.bonuses=(j.bonuses||[]).sort((a,b)=>a.id-b.id);
-    if(Array.isArray(j.students)){data.students=j.students.map(normStu);stuLoaded=true}
+    ALL.movements=(j.movements||[]).map(decBr).sort((a,b)=>a.id-b.id);
+    ALL.violations=(j.violations||[]).map(decBr).sort((a,b)=>a.id-b.id);
+    ALL.bonuses=(j.bonuses||[]).map(decBr).sort((a,b)=>a.id-b.id);
+    if(Array.isArray(j.students)){ALL.students=j.students.map(normStu);stuLoaded=true}
     clubApiOk=Array.isArray(j.clubs); // Code.gs cũ chưa có Câu lạc bộ
-    if(clubApiOk){data.clubs=j.clubs.sort((a,b)=>a.id-b.id);data.clubMembers=(j.clubMembers||[]).map(m=>Object.assign(m,{club:String(m.club)})).sort((a,b)=>a.id-b.id)}
-    if(j.roles&&typeof j.roles==='object'&&!Array.isArray(j.roles)){roleHolders=j.roles;saveRoleCache();paintHolders();syncWho()}
+    if(clubApiOk){ALL.clubs=j.clubs.map(decBr).sort((a,b)=>a.id-b.id);ALL.clubMembers=(j.clubMembers||[]).map(m=>decBr(Object.assign(m,{club:String(m.club)}))).sort((a,b)=>a.id-b.id)}
+    if(j.roles&&typeof j.roles==='object'&&!Array.isArray(j.roles)){roleHolders=j.roles;saveRoleCache();loadBranches();paintHolders();syncWho()}
     if(typeof j.rules==='string'&&document.activeElement!==$('#rl-note')&&!rlDirty)$('#rl-note').value=j.rules;
     render();
     setSync('đã đồng bộ Google Sheets lúc '+nowStr(),true);
@@ -1023,14 +1096,15 @@ async function refresh(){
 
 async function put(col,obj,msgEl){
   if(!canEdit(TAB_OF[col])){say(msgEl,denyMsg(TAB_OF[col]));return false}
-  if(!useApi){data[col].push(obj);saveLocal();render();return true}
+  if(!obj.branch)obj.branch=curBranch;
+  if(!useApi){ALL[col].push(obj);saveLocal();render();return true}
   busy++;
-  data[col].push(obj);render();
+  ALL[col].push(obj);render();
   try{
-    await apiPost({action:'add',type:col,data:obj});
+    await apiPost({action:'add',type:col,data:encBr(obj)});
     return true;
   }catch(e){
-    data[col]=data[col].filter(x=>x.id!==obj.id);render();
+    ALL[col]=ALL[col].filter(x=>x.id!==obj.id);render();
     say(msgEl,'Không lưu được lên Google Sheets: '+e.message);
     return false;
   }finally{busy--;refresh()}
@@ -1038,28 +1112,29 @@ async function put(col,obj,msgEl){
 async function remove(col,id,label){
   if(!canEdit(TAB_OF[col])){toast(denyMsg(TAB_OF[col]),false);return false}
   const done=()=>{if(label)toast('Đã xóa '+label+'.',true)};
-  if(!useApi){data[col]=data[col].filter(x=>String(x.id)!==String(id));saveLocal();render();done();return true}
+  if(!useApi){ALL[col]=ALL[col].filter(x=>String(x.id)!==String(id));saveLocal();render();done();return true}
   busy++;
-  const backup=data[col];
-  data[col]=data[col].filter(x=>String(x.id)!==String(id));render();
+  const backup=ALL[col];
+  ALL[col]=ALL[col].filter(x=>String(x.id)!==String(id));render();
   try{await apiPost({action:'delete',type:col,id:id});done();return true}
-  catch(e){data[col]=backup;render();setSync('không xóa được: '+e.message,false);toast('Không xóa được'+(label?' '+label:'')+': '+e.message,false);return false}
+  catch(e){ALL[col]=backup;render();setSync('không xóa được: '+e.message,false);toast('Không xóa được'+(label?' '+label:'')+': '+e.message,false);return false}
   finally{busy--;refresh()}
 }
 // Sửa = lưu bản mới rồi xóa bản cũ (Code.gs chỉ có thêm/xóa). Thêm trước, xóa sau để lỗi giữa chừng không mất dữ liệu.
 async function replaceItem(col,oldId,obj,msgEl){
   if(!canEdit(TAB_OF[col])){say(msgEl,denyMsg(TAB_OF[col]));return false}
+  if(!obj.branch)obj.branch=curBranch;
   const swap=l=>l.filter(x=>String(x.id)!==String(oldId)).concat(obj);
-  if(!useApi){data[col]=swap(data[col]);saveLocal();render();return true}
+  if(!useApi){ALL[col]=swap(ALL[col]);saveLocal();render();return true}
   busy++;
-  const backup=data[col];
-  data[col]=swap(data[col]);render();
+  const backup=ALL[col];
+  ALL[col]=swap(ALL[col]);render();
   try{
-    await apiPost({action:'add',type:col,data:obj});
+    await apiPost({action:'add',type:col,data:encBr(obj)});
     try{await apiPost({action:'delete',type:col,id:oldId})}
     catch(e){throw new Error('đã lưu bản mới nhưng chưa xóa được bản cũ ('+e.message+'), hãy xóa bản cũ bằng tay')}
     return true;
-  }catch(e){data[col]=backup;render();say(msgEl,'Không cập nhật được trên Google Sheets: '+e.message);return false}
+  }catch(e){ALL[col]=backup;render();say(msgEl,'Không cập nhật được trên Google Sheets: '+e.message);return false}
   finally{busy--;refresh()}
 }
 
@@ -1122,8 +1197,8 @@ function renderViol(){
     :'<div class="empty">'+(r==='day'?'Ngày '+vdate(from)+' chưa có vi phạm nào khớp bộ lọc. 👍':'Không có vi phạm nào khớp bộ lọc.')+'</div>';
   bindRows(box,'violations',v=>'lỗi "'+v.type+'" của '+v.name+' ('+v.cls+')',v=>startEdit('violations',v));
 }
-function render(){renderMoves();renderViol();renderRank();updateClassList();renderStu();updateStuHint();renderClubs();
-  if(document.body.classList.contains('in')){renderHome();renderAdmin()}}
+function render(){syncView();renderMoves();renderViol();renderRank();updateClassList();renderStu();updateStuHint();renderClubs();
+  if(document.body.classList.contains('in')){renderHome();renderAdmin();renderPH()}}
 
 $('#moveForm').onsubmit=async e=>{
   e.preventDefault();
@@ -1241,7 +1316,7 @@ const viSort=(a,b)=>lastWord(a.name).localeCompare(lastWord(b.name),'vi')||a.nam
 const clsSort=(a,b)=>a.localeCompare(b,'vi',{numeric:true});
 let _seq=0;
 const newStuId=()=>(Date.now()-1700000000000)*10000+(_seq++%10000); // mã số không trùng
-const normStu=s=>({id:Number(s.id),cls:normCls(s.cls),name:normName(s.name),gender:String(s.gender||''),by:String(s.by||'')});
+const normStu=s0=>{const s=decBr(Object.assign({},s0));return {id:Number(s.id),cls:normCls(s.cls),name:normName(s.name),gender:String(s.gender||''),by:String(s.by||''),branch:s.branch}};
 const who=()=>$('#who').textContent||'';
 let stuLoaded=!useApi;
 
@@ -1286,7 +1361,7 @@ function saveLocalStu(){
   try{localStorage.setItem(SK,JSON.stringify({list:localStu}));return true}
   catch(e){$('#sStore').textContent='⚠️ Không lưu được trên máy này (trình duyệt chặn lưu trữ hoặc đầy bộ nhớ).';return false}
 }
-const students={get list(){return useApi?data.students:localStu},get sample(){return this.list.some(isSample)}};
+const students={get list(){return useApi?data.students:localStu.filter(inBr)},get sample(){return this.list.some(isSample)}};
 const classesOf=()=>[...new Set(students.list.map(s=>s.cls))].sort(clsSort);
 const inClass=c=>students.list.filter(s=>s.cls===c).sort(viSort);
 function weekViolCount(){
@@ -1294,25 +1369,26 @@ function weekViolCount(){
   data.violations.forEach(v=>{if(v.date>=from&&v.date<=to){const k=v.cls+'|'+keyName(v.name);m[k]=(m[k]||0)+1}});
   return m;
 }
-function afterStu(){updateClassList();renderStu();updateStuHint()}
+function afterStu(){syncView();updateClassList();renderStu();updateStuHint()}
 
 // Ghi thay đổi: thêm (adds) và xóa (delIds). Thêm trước, xóa sau để lỡ lỗi giữa chừng cũng không mất dữ liệu.
 async function stuApply(adds,delIds,msgEl){
   if(!canEdit('pStu')){say(msgEl,denyMsg('pStu'));return false}
   const del=new Set(delIds.map(String));
+  adds.forEach(x=>{if(!x.branch)x.branch=curBranch});
   const apply=list=>list.filter(x=>!del.has(String(x.id))).concat(adds);
   if(!useApi){localStu=apply(localStu);if(!saveLocalStu())return false;afterStu();return true}
   busy++;
-  const backup=data.students;
-  data.students=apply(data.students);afterStu();
+  const backup=ALL.students;
+  ALL.students=apply(ALL.students);afterStu();
   try{
     for(let i=0;i<adds.length;i+=300)
-      await apiPost({action:'addMany',type:'students',data:adds.slice(i,i+300).map(x=>({id:x.id,cls:x.cls,name:x.name,by:x.by||'',gender:x.gender||''}))});
+      await apiPost({action:'addMany',type:'students',data:adds.slice(i,i+300).map(encBr).map(x=>({id:x.id,cls:x.cls,name:x.name,by:x.by||'',gender:x.gender||''}))});
     if(delIds.length===1)await apiPost({action:'delete',type:'students',id:delIds[0]});
     else if(delIds.length)await apiPost({action:'deleteMany',type:'students',ids:delIds});
     return true;
   }catch(e){
-    data.students=backup;afterStu();
+    ALL.students=backup;afterStu();
     say(msgEl,'Không lưu được lên Google Sheets: '+(/Hành động không hợp lệ/.test(e.message)?'Code.gs chưa được cập nhật bản mới. Dán Code.gs mới vào Apps Script rồi triển khai phiên bản mới.':e.message));
     return false;
   }finally{busy--;refresh()}
@@ -1596,7 +1672,7 @@ $('#sClear').onclick=async()=>{
 // =====================================================================
 // ===== GIAO DIỆN QUẢN TRỊ: menu trái, chuyển trang, thông báo nổi =====
 // =====================================================================
-const PAGES={pHome:['tong-quan','Tổng quan'],pViol:['vi-pham','Vi phạm'],pRank:['thi-dua','Thi đua'],pMove:['phong-trao','Phong trào'],pStu:['hoc-sinh','Học sinh'],pClub:['cau-lac-bo','Câu lạc bộ'],pAdmin:['quan-ly','Quản lý']};
+const PAGES={pHome:['tong-quan','Tổng quan'],pPH:['phan-hieu','Phân hiệu'],pViol:['vi-pham','Vi phạm'],pRank:['thi-dua','Thi đua'],pMove:['phong-trao','Phong trào'],pStu:['hoc-sinh','Học sinh'],pClub:['cau-lac-bo','Câu lạc bộ'],pAdmin:['quan-ly','Quản lý']};
 const TAB_ORDER=['pViol','pRank','pMove','pStu','pClub'];
 let curPage='pHome';
 function pageFromHash(){const h=decodeURIComponent(location.hash.slice(1));return Object.keys(PAGES).find(k=>PAGES[k][0]===h)}
@@ -1609,7 +1685,7 @@ function go(p,replace){
   if(location.hash!==h){try{if(replace)history.replaceState(null,'',h);else location.hash=h}catch(e){}}
   document.title=PAGES[p][1]+' · Quản lý Đội';
   sideOpen(false);
-  if(p==='pHome')renderHome();else if(p==='pRank')renderRank();else if(p==='pStu')renderStu();else if(p==='pClub')renderClubs();else if(p==='pAdmin')renderAdmin();
+  if(p==='pHome')renderHome();else if(p==='pPH')renderPH();else if(p==='pRank')renderRank();else if(p==='pStu')renderStu();else if(p==='pClub')renderClubs();else if(p==='pAdmin')renderAdmin();
   window.scrollTo(0,0);
 }
 addEventListener('hashchange',()=>{if(!document.body.classList.contains('in'))return;const p=pageFromHash();if(p&&p!==curPage)go(p,true)});
@@ -1641,7 +1717,7 @@ const initial=n=>{const w=String(n||'').trim().split(/\s+/);return (w[w.length-1
 function roleLabel(){return curRole||(curAcct==='admin'?'Quản trị viên':'Tài khoản trường')}
 function fillUser(){
   const n=who(),r=roleLabel();
-  $('#sideName').textContent=n;$('#sideRole').textContent=r;$('#topRole').textContent=r;$('#helloName').textContent=n;
+  $('#sideName').textContent=n;$('#sideRole').textContent=r;$('#topRole').textContent=r+' · '+brLabel(curBranch);$('#helloName').textContent=n;
   $('#sideAv').textContent=initial(n);$('#topDate').textContent='📅 '+longDate(today());
 }
 
@@ -1691,7 +1767,7 @@ function exitAllEdits(){Object.keys(editing).forEach(exitEdit)}
 Object.keys(EDIT_UI).forEach(col=>{$(EDIT_UI[col].cancel).onclick=()=>{exitEdit(col);$(EDIT_UI[col].msg).textContent=''}});
 
 // ----- Trang Tổng quan -----
-const HOME_APPS=[['pViol','📝','t-r','Vi phạm'],['pRank','🏆','t-o','Thi đua'],['pMove','🚩','t-b','Phong trào'],['pStu','👥','t-p','Học sinh'],['pClub','🎯','t-p','Câu lạc bộ'],['pAdmin','⚙️','t-c','Quản lý'],['ai','🤖','t-g','Trợ lý AI'],['xlsx','📥','t-b','Excel học sinh']];
+const HOME_APPS=[['pPH','🏢','t-o','Phân hiệu'],['pViol','📝','t-r','Vi phạm'],['pRank','🏆','t-o','Thi đua'],['pMove','🚩','t-b','Phong trào'],['pStu','👥','t-p','Học sinh'],['pClub','🎯','t-p','Câu lạc bộ'],['pAdmin','⚙️','t-c','Quản lý'],['ai','🤖','t-g','Trợ lý AI'],['xlsx','📥','t-b','Excel học sinh']];
 $('#homeApps').innerHTML=HOME_APPS.map(a=>'<button type="button" class="appb" data-app="'+a[0]+'"><i class="'+a[2]+'">'+a[1]+'</i>'+a[3]+'</button>').join('');
 $('#homeApps').onclick=e=>{const b=e.target.closest('.appb');if(!b)return;const k=b.dataset.app;
   if(k==='ai')aiOpen(true);else if(k==='xlsx')$('#sExp').click();else go(k)};
@@ -1715,7 +1791,7 @@ function renderHome(){
   const td=today(),yd=addDays(td,-1),[wf,wt]=weekRange(td),V=data.violations,MV=data.movements,L=students.list;
   const dl=V.filter(v=>v.date===td),yl=V.filter(v=>v.date===yd),wk=V.filter(v=>v.date>=wf&&v.date<=wt),wb=data.bonuses.filter(b=>b.date>=wf&&b.date<=wt);
   $('#helloName').textContent=who();
-  $('#helloDate').textContent=longDate(td)+' · Tuần '+vdate(wf)+' → '+vdate(wt)+' · '+roleLabel();
+  $('#helloDate').textContent='🏢 '+brLabel(curBranch)+' · '+longDate(td)+' · Tuần '+vdate(wf)+' → '+vdate(wt)+' · '+roleLabel();
   $('#homeDay').textContent=longDate(td);
   const diff=dl.length-yl.length;
   const cmp=diff?'<em class="'+(diff>0?'up':'down')+'">'+(diff>0?'▲ ':'▼ ')+Math.abs(diff)+' so với hôm qua</em>':'<em class="muted">bằng hôm qua</em>';
@@ -1765,7 +1841,7 @@ function renderAdmin(){
   const ns=students.list.filter(isSample).length;
   $('#admData').innerHTML='<dl class="kv"><dt>Nơi lưu</dt><dd>'+(useApi?'☁️ Google Sheets (mọi máy dùng chung)':'💻 Chỉ trên máy này')+'</dd><dt>Trạng thái</dt><dd>'+esc($('#sync').textContent)+'</dd><dt>Tự đồng bộ</dt><dd>'+(useApi?'mỗi '+POLL_MS/1000+' giây':'không')+'</dd><dt>Trợ lý AI</dt><dd>'+(AI_URL_OK?'🤖 ChatGPT (đã nối)':'⚡ Trả lời nhanh theo dữ liệu app')+'</dd><dt>Học sinh mẫu</dt><dd>'+(ns?ns.toLocaleString('vi-VN')+' em (tên giả định)':'không có')+'</dd></dl>';
   const keys=Object.keys(ROLE_PERMS),cut=keys.indexOf('Học sinh');
-  const row=k=>'<tr'+(k===curRole?' class="me"':'')+'><td><b>'+esc(k)+'</b>'+(k===curRole?' <span class="pill t-p">bạn</span>':'')+(holderOf(k)?'<small>👤 '+esc(holderOf(k))+'</small>':'')+'</td>'+TAB_ORDER.map(t=>'<td>'+(ROLE_PERMS[k].includes(t)?'✏️':'👁️')+'</td>').join('')+'</tr>';
+  const row=k=>'<tr'+(k===curRole?' class="me"':'')+'><td><b>'+esc(k)+'</b>'+(k===curRole?' <span class="pill t-p">bạn</span>':'')+(holderOf(hk(k))?'<small>👤 '+esc(holderOf(hk(k)))+'</small>':'')+'</td>'+TAB_ORDER.map(t=>'<td>'+(ROLE_PERMS[k].includes(t)?'✏️':'👁️')+'</td>').join('')+'</tr>';
   const grp=t=>'<tr class="grp"><td colspan="'+(TAB_ORDER.length+1)+'">'+t+'</td></tr>';
   $('#admPerm').innerHTML='<table class="tb perm"><thead><tr><th>Vai trò</th>'+TAB_ORDER.map(t=>'<th>'+TAB_NAME[t]+'</th>').join('')+'</tr></thead><tbody>'+
     grp('QUẢN LÝ')+keys.slice(0,cut).map(row).join('')+grp('HỌC SINH')+keys.slice(cut).map(row).join('')+grp('TÀI KHOẢN ĐĂNG NHẬP')+
@@ -1808,10 +1884,12 @@ let roleHolders=(()=>{try{const o=JSON.parse(localStorage.getItem(RK));return o&
 let whoEditing=false;
 const holderOf=k=>String((k&&roleHolders[k])||'').trim();
 // Khóa lưu tên: vai trò bản demo, hoặc "Tài khoản: tên đăng nhập"
-const nameKey=()=>curRole||(curAcct?'Tài khoản: '+curAcct:'');
+// Mỗi phân hiệu có người đảm nhận chức vụ riêng (Phân hiệu 1 dùng khóa cũ để giữ dữ liệu đã có)
+const hk=k=>!k||curBranch===DEF_BR?k:k+' @'+curBranch;
+const nameKey=()=>hk(curRole||(curAcct?'Tài khoản: '+curAcct:''));
 function saveRoleCache(){try{localStorage.setItem(RK,JSON.stringify(roleHolders))}catch(e){}}
 function paintHolders(){
-  document.querySelectorAll('.role').forEach(b=>{const h=b.querySelector('.holder'),n=holderOf(b.dataset.role);if(h)h.textContent=n?'👤 '+n:''});
+  document.querySelectorAll('.role').forEach(b=>{const h=b.querySelector('.holder'),n=holderOf(hk(b.dataset.role));if(h)h.textContent=n?'👤 '+n:''});
 }
 function syncWho(){ // tên trên máy chủ đổi (máy khác vừa sửa) → cập nhật lời chào
   if(!document.body.classList.contains('in')||whoEditing)return;
@@ -1849,6 +1927,216 @@ $('#whoForm').onsubmit=async e=>{
   toast(name?'Đã đổi tên: Xin chào, '+name+'!':'Đã xóa tên, lời chào trở về "'+defaultName+'".',true);
   $('#whoEdit').focus();
 };
+
+// =====================================================================
+// ===== PHÂN HIỆU: danh sách, chuyển đổi, trang quản lý tổng thể =====
+// Danh sách phân hiệu lưu chung với "tên người đảm nhận chức vụ" (trang tính CaiDat) dưới khóa "__ph:<mã nội bộ>",
+// giá trị dạng "PH1|1|Trường chính|địa chỉ". Không cần sửa Code.gs.
+// =====================================================================
+const BK='qld_branches',BCUR='qld_branch',BR_KEY='__ph:';
+const DEFAULT_BRANCHES=[{id:'ph1',code:'PH1',name:'Trường chính',addr:'',active:true},{id:'ph2',code:'PH2',name:'Phân hiệu phụ',addr:'',active:true}];
+const brById=id=>branches.find(b=>b.id===id);
+const brLabel=id=>{const b=brById(id);return b?b.name+' ('+b.code+')':'Phân hiệu'};
+const brNum=id=>parseInt(String(id).replace(/\D/g,''),10)||0;
+const isAdmin=()=>curAcct==='admin'||curRole==='Tổng phụ trách';
+const brEnc=b=>[b.code,b.active?1:0,b.name,b.addr||''].map(s=>String(s).replace(/\|/g,'/')).join('|');
+let brEditing=null,brRenaming=null;
+function loadBranches(){
+  let list=null;
+  const keys=Object.keys(roleHolders).filter(k=>k.startsWith(BR_KEY));
+  if(keys.length)list=keys.map(k=>{const p=String(roleHolders[k]).split('|');return {id:k.slice(BR_KEY.length),code:p[0]||k.slice(BR_KEY.length).toUpperCase(),active:p[1]!=='0',name:p[2]||p[0]||'',addr:p[3]||''}});
+  if(!list){try{const l=JSON.parse(localStorage.getItem(BK));if(Array.isArray(l)&&l.length)list=l.filter(b=>b&&b.id)}catch(e){}}
+  if(!list||!list.length)list=DEFAULT_BRANCHES.map(b=>Object.assign({},b));
+  if(!list.some(b=>b.id===DEF_BR))list.unshift(Object.assign({},DEFAULT_BRANCHES[0]));
+  branches=list.sort((a,b)=>brNum(a.id)-brNum(b.id));
+  try{localStorage.setItem(BK,JSON.stringify(branches))}catch(e){}
+  if(!brById(curBranch))setBranch(DEF_BR);
+  paintBrUI();
+}
+async function saveBranches(list,msgEl){
+  branches=list.slice().sort((a,b)=>brNum(a.id)-brNum(b.id));
+  try{localStorage.setItem(BK,JSON.stringify(branches))}catch(e){}
+  if(useApi){
+    busy++;
+    try{
+      for(const b of branches){
+        const k=BR_KEY+b.id,v=brEnc(b);
+        if(roleHolders[k]===v)continue;
+        const r=await apiPost({action:'setRole',role:k,name:v});
+        if(r.roles&&typeof r.roles==='object')roleHolders=r.roles;else roleHolders[k]=v;
+      }
+      saveRoleCache();
+    }catch(e){say(msgEl,'Đã lưu trên máy này nhưng chưa lưu được danh sách phân hiệu lên Google Sheets: '+e.message)}
+    finally{busy--}
+  }
+  paintBrUI();render();fillUser();
+  return true;
+}
+function setBranch(id){curBranch=id;try{localStorage.setItem(BCUR,id)}catch(e){}}
+function paintBrUI(){
+  const opt=b=>'<option value="'+esc(b.id)+'">'+esc(b.name)+' · '+esc(b.code)+(b.active?'':' (ngừng)')+'</option>';
+  const adm=isAdmin(),sel=$('#brSel');
+  sel.innerHTML=(adm?branches:branches.filter(b=>b.id===curBranch)).map(opt).join('')+(adm?'<option value="__all">📊 Trang tổng thể…</option>':'');
+  sel.value=curBranch;sel.disabled=!adm;
+  sel.closest('.br-sw').title=adm?'Chuyển phân hiệu':'Chỉ Admin hoặc Tổng phụ trách được chuyển phân hiệu';
+  const act=branches.filter(b=>b.active),lb=$('#loginBr'),lv=lb.value||curBranch;
+  lb.innerHTML=act.map(opt).join('');
+  lb.value=act.some(b=>b.id===lv)?lv:act.some(b=>b.id===curBranch)?curBranch:((act[0]||{}).id||DEF_BR);
+  $('#sideBr').textContent=brLabel(curBranch);
+  const nb=$('#nbPH');nb.hidden=branches.length<2;nb.textContent=branches.length;
+}
+function switchBranch(id){
+  if(!brById(id)||id===curBranch){paintBrUI();return}
+  if(!isAdmin()){toast('Chỉ Admin hoặc Tổng phụ trách được chuyển phân hiệu.',false);paintBrUI();return}
+  exitAllEdits();whoEdit(false);
+  setBranch(id);clubSel='';
+  ['#sq','#vq','#mq','#clq','#memQ','#rq'].forEach(s=>{const e=$(s);if(e)e.value=''});
+  $('#who').textContent=holderOf(nameKey())||defaultName;
+  paintBrUI();paintHolders();render();fillUser();applyPerms();
+  toast('Đã chuyển sang '+brLabel(id)+'. Mọi dữ liệu và số liệu đã cập nhật theo phân hiệu này.',true);
+}
+$('#brSel').onchange=()=>{const v=$('#brSel').value;if(v==='__all'){$('#brSel').value=curBranch;go('pPH')}else switchBranch(v)};
+$('#loginBr').onchange=()=>{setBranch($('#loginBr').value);paintBrUI();paintHolders()};
+
+function brStats(id){
+  const f=x=>(x.branch||DEF_BR)===id,td=today(),[wf,wt]=weekRange(td);
+  const stu=(useApi?ALL.students:localStu).filter(f),v=ALL.violations.filter(f),vw=v.filter(x=>x.date>=wf&&x.date<=wt);
+  const mv=ALL.movements.filter(f);
+  return {stu:stu.length,cls:new Set(stu.map(s=>s.cls)).size,vd:v.filter(x=>x.date===td).length,vw:vw.length,minus:sumPts(vw),
+    plus:sumPts(ALL.bonuses.filter(f).filter(x=>x.date>=wf&&x.date<=wt)),mvOn:mv.filter(m=>moveStatus(m)==='on').length,clubs:ALL.clubs.filter(f).length};
+}
+function renderPH(){
+  if(!$('#phList'))return;
+  const adm=isAdmin(),st={};branches.forEach(b=>{st[b.id]=brStats(b.id)});
+  const tot=k=>branches.reduce((a,b)=>a+st[b.id][k],0),[wf,wt]=weekRange(today());
+  $('#phStats').innerHTML=statTile('🏢','t-o',branches.filter(b=>b.active).length+'/'+branches.length,'Phân hiệu đang hoạt động')+
+    statTile('👥','t-p',tot('stu').toLocaleString('vi-VN'),'Học sinh toàn hệ thống')+statTile('🏫','t-b',tot('cls'),'Lớp toàn hệ thống')+statTile('📝','t-r',tot('vw'),'Vi phạm tuần này (tất cả)');
+  $('#phSum').textContent=branches.length+' phân hiệu';
+  $('#phNote').hidden=adm;
+  if(!adm)$('#phNote').textContent='🔒 Bạn đang làm việc tại '+brLabel(curBranch)+'. Chỉ Admin hoặc Tổng phụ trách được chuyển, thêm, sửa hay ngừng hoạt động phân hiệu.';
+  // đang gõ tên mới thì không vẽ lại danh sách (app tự đồng bộ liên tục)
+  const keepList=brRenaming&&$('#phList').contains(document.activeElement);
+  if(!keepList)$('#phList').innerHTML=branches.map(b=>{const s=st[b.id],cur=b.id===curBranch;
+    return '<div class="club'+(cur?' sel':'')+(b.active?'':' br-off')+'"><div class="club-h"><i class="t-o">🏢</i><div style="min-width:0">'+(brRenaming===b.id?
+        '<form class="who-form br-rn" data-rnf="'+esc(b.id)+'"><label class="sr" for="rn-'+esc(b.id)+'">Tên mới</label><input id="rn-'+esc(b.id)+'" maxlength="40" value="'+esc(b.name)+'"><button class="ib edit" type="submit">💾 Lưu</button><button class="ib" type="button" data-rnc>Hủy</button></form>'
+        :'<b>'+esc(b.name)+(adm?'<button type="button" class="pen-btn" data-rn="'+esc(b.id)+'" title="Đổi tên phân hiệu" aria-label="Đổi tên '+esc(b.name)+'">✏️</button>':'')+'</b>')+
+      pill('Mã: '+b.code,'t-b')+' '+(b.active?pill('Đang hoạt động','t-g'):pill('Ngừng hoạt động','t-x'))+(cur?' '+pill('Đang xem','t-p'):'')+'</div></div>'+
+      (b.addr?'<div class="club-meta"><span>📍 '+esc(b.addr)+'</span></div>':'')+
+      '<div class="br-st"><span><b>'+s.stu.toLocaleString('vi-VN')+'</b> học sinh</span><span><b>'+s.cls+'</b> lớp</span><span><b>'+s.vw+'</b> lỗi tuần này</span><span><b>'+s.mvOn+'</b> phong trào đang chạy</span></div>'+
+      '<div class="club-f"><button type="button" class="ib mem" data-acc="'+esc(b.id)+'"'+(cur||!adm?' disabled':'')+'>'+(cur?'✅ Đang truy cập':'➡️ Truy cập')+'</button>'+
+      '<button type="button" class="ib edit" data-ed="'+esc(b.id)+'" title="Sửa thông tin"'+(adm?'':' disabled')+'>✏️<span class="t"> Sửa</span></button>'+
+      '<button type="button" class="ib rm" data-tg="'+esc(b.id)+'" title="'+(b.active?'Ngừng hoạt động':'Hoạt động lại')+'"'+(adm?'':' disabled')+'>'+(b.active?'⏸️<span class="t"> Ngừng</span>':'▶️<span class="t"> Mở lại</span>')+'</button>'+
+      '<button type="button" class="ib rm" data-del="'+esc(b.id)+'" title="'+(b.id===DEF_BR?'Không xóa được phân hiệu chính':'Xóa phân hiệu')+'"'+(adm&&b.id!==DEF_BR?'':' disabled')+'>🗑️<span class="t"> Xóa</span></button></div></div>'}).join('');
+  $('#phWeek').textContent='Tuần '+vdate(wf)+' → '+vdate(wt);
+  const row=(cls,name,s)=>'<tr'+cls+'><td><b>'+name+'</b></td><td class="n">'+s.stu.toLocaleString('vi-VN')+'</td><td class="n hm">'+s.cls+'</td><td class="n hm">'+s.vd+'</td><td class="n">'+s.vw+'</td><td class="n minus-t hm">−'+s.minus+'</td><td class="n plus-t hm">+'+s.plus+'</td><td class="n hm">'+s.mvOn+'</td><td class="n hm">'+s.clubs+'</td></tr>';
+  const T={};['stu','cls','vd','vw','minus','plus','mvOn','clubs'].forEach(k=>T[k]=tot(k));
+  $('#phCmp').innerHTML='<table class="tb"><thead><tr><th>Phân hiệu</th><th class="n">Học sinh</th><th class="n hm">Lớp</th><th class="n hm">Lỗi hôm nay</th><th class="n">Lỗi tuần</th><th class="n hm">Điểm trừ</th><th class="n hm">Điểm cộng</th><th class="n hm">Phong trào</th><th class="n hm">CLB</th></tr></thead><tbody>'+
+    branches.map(b=>row(b.id===curBranch?' class="cur-br"':'',esc(b.name)+' <small>'+esc(b.code)+(b.active?'':' · ngừng')+'</small>',st[b.id])).join('')+
+    row('','Tổng cộng',T)+'</tbody></table>';
+  $('#phList').querySelectorAll('[data-acc]').forEach(x=>x.onclick=()=>{switchBranch(x.dataset.acc);go('pHome')});
+  $('#phList').querySelectorAll('[data-ed]').forEach(x=>x.onclick=()=>brStartEdit(x.dataset.ed));
+  $('#phList').querySelectorAll('[data-tg]').forEach(x=>x.onclick=()=>brToggle(x.dataset.tg));
+  $('#phList').querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>brDelete(x.dataset.del));
+  $('#phList').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>{if(!isAdmin())return;brRenaming=x.dataset.rn;renderPH();const i=$('#rn-'+brRenaming);if(i){i.focus();i.select()}});
+  $('#phList').querySelectorAll('[data-rnc]').forEach(x=>x.onclick=()=>{brRenaming=null;renderPH()});
+  $('#phList').querySelectorAll('[data-rnf]').forEach(f=>{
+    const inp=f.querySelector('input');
+    inp.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();brRenaming=null;renderPH()}};
+    f.onsubmit=async e=>{
+      e.preventDefault();
+      const id=f.dataset.rnf,b=brById(id),name=normName(inp.value).replace(/\|/g,'/').slice(0,40);
+      if(!b||!isAdmin())return;
+      if(!name){toast('Tên phân hiệu không được để trống.',false);inp.focus();return}
+      if(branches.some(x=>x.id!==id&&keyName(x.name)===keyName(name))){toast('Đã có phân hiệu tên "'+name+'".',false);inp.focus();return}
+      brRenaming=null;
+      if(name===b.name){renderPH();return}
+      await saveBranches(branches.map(x=>x.id===id?Object.assign({},x,{name}):x),$('#phmsg'));
+      toast('Đã đổi tên "'+b.name+'" thành "'+name+'".',true);
+    };
+  });
+  $('#phForm').querySelectorAll('input,button').forEach(e=>e.disabled=!adm);
+  if(!adm)$('#phmsg').textContent='Chỉ Admin hoặc Tổng phụ trách được thêm phân hiệu.';
+  else if(/^Chỉ Admin/.test($('#phmsg').textContent))$('#phmsg').textContent='';
+}
+function brStartEdit(id){
+  const b=brById(id);if(!b||!isAdmin())return;
+  brEditing=id;$('#phn').value=b.name;$('#phc').value=b.code;$('#pha').value=b.addr||'';
+  $('#phFormTitle').textContent='✏️ Sửa phân hiệu';$('#phSubmit').textContent='Cập nhật phân hiệu';$('#phCancel').hidden=false;
+  $('#phFormCard').classList.add('editing');$('#phmsg').textContent='';
+  $('#phFormCard').scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>$('#phn').focus({preventScroll:true}),60);
+}
+function brEndEdit(){
+  brEditing=null;$('#phForm').reset();
+  $('#phFormTitle').textContent='➕ Thêm phân hiệu mới';$('#phSubmit').textContent='Thêm phân hiệu';$('#phCancel').hidden=true;
+  $('#phFormCard').classList.remove('editing');
+}
+$('#phCancel').onclick=()=>{brEndEdit();$('#phmsg').textContent=''};
+// Xóa phân hiệu: xóa luôn toàn bộ dữ liệu thuộc phân hiệu đó. Không xóa được Phân hiệu chính (PH1),
+// vì dữ liệu cũ chưa gắn phân hiệu đều thuộc PH1.
+async function brDelete(id){
+  const b=brById(id);if(!b)return;
+  if(!isAdmin()){toast('Chỉ Admin hoặc Tổng phụ trách được xóa phân hiệu.',false);return}
+  if(id===DEF_BR){toast('Không xóa được phân hiệu chính ('+b.code+'). Có thể đổi tên hoặc ngừng hoạt động.',false);return}
+  const mine=x=>(x.branch||DEF_BR)===id;
+  const stuL=(useApi?ALL.students:localStu).filter(mine);
+  const ids={};COLS.forEach(k=>{ids[k]=(k==='students'?stuL:ALL[k].filter(mine)).map(x=>x.id)});
+  const n=COLS.reduce((a,k)=>a+ids[k].length,0);
+  const what=[[ids.students.length,'học sinh'],[ids.violations.length,'lượt vi phạm'],[ids.bonuses.length,'lượt cộng điểm'],[ids.movements.length,'phong trào'],[ids.clubs.length,'câu lạc bộ'],[ids.clubMembers.length,'thành viên CLB']].filter(x=>x[0]).map(x=>x[0]+' '+x[1]).join(', ');
+  if(!confirm('XÓA phân hiệu "'+b.name+'" ('+b.code+')?\n\n'+(n?'Toàn bộ dữ liệu của phân hiệu này cũng bị xóa vĩnh viễn: '+what+'.':'Phân hiệu này chưa có dữ liệu.')+'\nKhông thể hoàn tác.'+(n?'\n\nNếu chỉ muốn tạm dừng, hãy bấm "Ngừng" thay vì xóa.':'')))return;
+  if(n){const t=prompt('Gõ mã phân hiệu "'+b.code+'" để xác nhận xóa:');if(t==null)return;if(t.trim().toUpperCase()!==b.code){toast('Mã không khớp, chưa xóa phân hiệu.',false);return}}
+  if(curBranch===id){exitAllEdits();whoEdit(false);setBranch(DEF_BR);clubSel='';$('#who').textContent=holderOf(nameKey())||defaultName}
+  if(brEditing===id)brEndEdit();
+  if(brRenaming===id)brRenaming=null;
+  const hkeys=Object.keys(roleHolders).filter(k=>k===BR_KEY+id||k.endsWith(' @'+id));
+  if(useApi){
+    busy++;
+    try{
+      for(const k of COLS)for(let i=0;i<ids[k].length;i+=300)await apiPost({action:'deleteMany',type:k,ids:ids[k].slice(i,i+300)});
+      for(const k of hkeys){const r=await apiPost({action:'setRole',role:k,name:''});if(r.roles&&typeof r.roles==='object')roleHolders=r.roles}
+    }catch(e){busy--;toast('Chưa xóa xong phân hiệu trên Google Sheets: '+e.message+'. Hãy thử lại.',false);refresh();return}
+    busy--;
+  }
+  COLS.forEach(k=>{ALL[k]=ALL[k].filter(x=>!mine(x))});
+  localStu=localStu.filter(x=>!mine(x));
+  hkeys.forEach(k=>delete roleHolders[k]);saveRoleCache();
+  if(!useApi){saveLocal();saveLocalStu()}
+  branches=branches.filter(x=>x.id!==id);
+  if(!branches.some(x=>x.active))branches=branches.map(x=>x.id===DEF_BR?Object.assign({},x,{active:true}):x);
+  try{localStorage.setItem(BK,JSON.stringify(branches))}catch(e){}
+  paintBrUI();paintHolders();render();fillUser();applyPerms();
+  toast('Đã xóa phân hiệu "'+b.name+'"'+(n?' cùng '+n+' dòng dữ liệu':'')+'.',true);
+  if(useApi)refresh();
+}
+async function brToggle(id){
+  const b=brById(id);if(!b)return;
+  if(!isAdmin()){toast('Chỉ Admin hoặc Tổng phụ trách được ngừng hoạt động phân hiệu.',false);return}
+  if(b.active&&branches.filter(x=>x.active).length<2){toast('Phải còn ít nhất một phân hiệu đang hoạt động.',false);return}
+  if(b.active&&!confirm('Ngừng hoạt động "'+b.name+'"?\nDữ liệu vẫn được giữ nguyên. Người dùng khác sẽ không chọn được phân hiệu này khi đăng nhập; Admin vẫn truy cập được và có thể mở lại.'))return;
+  await saveBranches(branches.map(x=>x.id===id?Object.assign({},x,{active:!x.active}):x),$('#phmsg'));
+  toast((b.active?'Đã ngừng hoạt động ':'Đã mở lại ')+b.name+'.',true);
+}
+$('#phForm').onsubmit=async e=>{
+  e.preventDefault();const m=$('#phmsg');
+  if(!isAdmin()){say(m,'Chỉ Admin hoặc Tổng phụ trách được thêm, sửa phân hiệu.');return}
+  const name=normName($('#phn').value).replace(/\|/g,'/').slice(0,40),code=$('#phc').value.trim().toUpperCase(),addr=normName($('#pha').value).replace(/\|/g,'/').slice(0,40);
+  if(!name){say(m,'Nhập tên phân hiệu.');$('#phn').focus();return}
+  if(!/^[A-Z0-9_-]{1,10}$/.test(code)){say(m,'Mã phân hiệu gồm chữ không dấu, số, _ hoặc - (tối đa 10 ký tự), VD: PH3.');$('#phc').focus();return}
+  if(branches.some(b=>b.code===code&&b.id!==brEditing)){say(m,'Mã "'+code+'" đã được dùng.');return}
+  if(branches.some(b=>keyName(b.name)===keyName(name)&&b.id!==brEditing)){say(m,'Đã có phân hiệu tên "'+name+'".');return}
+  if(brEditing){
+    const id=brEditing;
+    await saveBranches(branches.map(b=>b.id===id?Object.assign({},b,{name,code,addr}):b),m);
+    brEndEdit();say(m,'Đã cập nhật phân hiệu "'+name+'".',true);return;
+  }
+  // mã nội bộ mới không trùng phân hiệu đã xóa (tránh nhận lại dữ liệu, tên chức vụ cũ)
+  const used=[...branches.map(b=>brNum(b.id)),...COLS.flatMap(k=>ALL[k].map(x=>brNum(x.branch))),...localStu.map(x=>brNum(x.branch)),
+    ...Object.keys(roleHolders).map(k=>{const m=k.match(/(?:@|^__ph:)ph(\d+)$/);return m?+m[1]:0})];
+  const id='ph'+(Math.max(0,...used)+1);
+  await saveBranches(branches.concat({id,code,name,addr,active:true}),m);
+  $('#phForm').reset();say(m,'Đã thêm phân hiệu "'+name+'". Bấm "Truy cập" để bắt đầu nhập dữ liệu cho phân hiệu này.',true);
+};
+try{const c=localStorage.getItem(BCUR);if(c)curBranch=c}catch(e){}
+loadBranches();
 paintHolders();
 
 // =====================================================================
@@ -1869,18 +2157,19 @@ const clubById=id=>data.clubs.find(c=>String(c.id)===String(id));
 async function putMany(col,list,msgEl){
   if(!canEdit(TAB_OF[col])){say(msgEl,denyMsg(TAB_OF[col]));return false}
   if(!list.length)return true;
-  if(!useApi){data[col]=data[col].concat(list);saveLocal();render();return true}
-  busy++;const backup=data[col];data[col]=data[col].concat(list);render();
-  try{await apiPost({action:'addMany',type:col,data:list});return true}
-  catch(e){data[col]=backup;render();say(msgEl,'Không lưu được lên Google Sheets: '+e.message);return false}
+  list.forEach(x=>{if(!x.branch)x.branch=curBranch});
+  if(!useApi){ALL[col]=ALL[col].concat(list);saveLocal();render();return true}
+  busy++;const backup=ALL[col];ALL[col]=ALL[col].concat(list);render();
+  try{await apiPost({action:'addMany',type:col,data:list.map(encBr)});return true}
+  catch(e){ALL[col]=backup;render();say(msgEl,'Không lưu được lên Google Sheets: '+e.message);return false}
   finally{busy--;refresh()}
 }
 async function removeMany(col,ids){
   const set=new Set(ids.map(String));
-  if(!useApi){data[col]=data[col].filter(x=>!set.has(String(x.id)));saveLocal();render();return true}
-  busy++;const backup=data[col];data[col]=data[col].filter(x=>!set.has(String(x.id)));render();
+  if(!useApi){ALL[col]=ALL[col].filter(x=>!set.has(String(x.id)));saveLocal();render();return true}
+  busy++;const backup=ALL[col];ALL[col]=ALL[col].filter(x=>!set.has(String(x.id)));render();
   try{await apiPost({action:'deleteMany',type:col,ids:[...set]});return true}
-  catch(e){data[col]=backup;render();toast('Chưa xóa được thành viên của câu lạc bộ: '+e.message,false);return false}
+  catch(e){ALL[col]=backup;render();toast('Chưa xóa được thành viên của câu lạc bộ: '+e.message,false);return false}
   finally{busy--;refresh()}
 }
 
@@ -2068,7 +2357,8 @@ function aiContext(){
     siSoTheoLop:Object.fromEntries(classesOf().map(c=>[c,students.list.filter(s=>s.cls===c).length])),
     tongHocSinh:students.list.length,
     cauLacBo:data.clubs.map(c=>({ten:c.name,linhVuc:c.field,phuTrach:c.leader,lichSinhHoat:c.schedule,diaDiem:c.place,soThanhVien:membersOf(c.id).length})),
-    nguoiDamNhanChucVu:Object.fromEntries(Object.keys(ROLE_PERMS).filter(holderOf).map(k=>[k,holderOf(k)])),
+    phanHieuDangXem:(brById(curBranch)||{}).name||'',
+    nguoiDamNhanChucVu:Object.fromEntries(Object.keys(ROLE_PERMS).filter(k=>holderOf(hk(k))).map(k=>[k,holderOf(hk(k))])),
     phongTrao:data.movements.slice(-15).map(m=>({ten:m.name,batDau:m.start,ketThuc:m.end,noiDung:String(m.desc||'').slice(0,200)}))
   };
 }
